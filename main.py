@@ -1,16 +1,13 @@
-# source
-# https://github.com/kxvxnc/Stockx-Discord-Bot/blob/master/main.py
-
 import discord
-from discord.ext import commands
 import json
 import requests
 import asyncio
+from dotenv import load_dotenv
+import os
 
-# NzY0NTIyMzk2OTUzNjA4MjAz.X4He9w.FgfgSSIgmk2zbhsYExcIMxjDzCI
-# actual bot token ^^
-# test bot token: NzcxMDY0MTU2ODQwMzk0NzYy.X5mrdA.jLHF-As5TRaNSV0p2ujq0xMbAMg
-token = "NzcxMDY0MTU2ODQwMzk0NzYy.X5mrdA.jLHF-As5TRaNSV0p2ujq0xMbAMg"
+load_dotenv()
+
+TOKEN = os.environ.get(TOKEN)
 client = commands.Bot(command_prefix=".")
 selected = 0
 numResults = 0
