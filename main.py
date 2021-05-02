@@ -3,10 +3,8 @@ from discord.ext import commands
 import json
 import requests
 import asyncio
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
 
 API_KEY = str(os.environ.get(API_KEY))
 TOKEN = os.environ.get(TOKEN)
