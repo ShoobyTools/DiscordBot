@@ -1,4 +1,5 @@
 import discord
+from discord.ext import commands
 import json
 import requests
 import asyncio
@@ -7,6 +8,7 @@ import os
 
 load_dotenv()
 
+API_KEY = str(os.environ.get(API_KEY))
 TOKEN = os.environ.get(TOKEN)
 client = commands.Bot(command_prefix=".")
 selected = 0
@@ -20,44 +22,48 @@ async def on_ready():
     )
 
 
-async def lookup_stockx(selection, keywords, ctx):
+# scrape stockx and return a json
+async def scrape(keywords):
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
         "x-algolia-agent": "Algolia for vanilla JavaScript 3.32.0",
         "x-algolia-application-id": "XW7SBCT9V6",
-        "x-algolia-api-key": "6bfb5abee4dcd8cea8f0ca1ca085c2b3",
-    }
-    header = {
-        "accept": "*/*",
-        "accept-encoding": "gzip, deflate, br",
-        "accept-language": "en-US,en;q=0.9,ja-JP;q=0.8,ja;q=0.7,la;q=0.6",
-        "appos": "web",
-        "appversion": "0.1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+        "x-algolia-api-key": API_KEY,
     }
     with requests.Session() as session:
         r = session.post(
             "https://xw7sbct9v6-dsn.algolia.net/1/indexes/products/query",
             params=algolia,
-            verify=False,
+            verify=True,
             data=byte_payload,
             timeout=30,
         )
-        results = r.json()["hits"][selection]
-        apiurl = f"https://stockx.com/api/products/{results['url']}?includes=market,360&currency=USD"
+        return r.json()
 
-    response = requests.get(apiurl, verify=False, headers=header)
-    prices = response.json()
-    general = prices["Product"]
-    sizes = prices["Product"]["children"]
+
+async def lookup_stockx(result, ctx):
+    product_url = result["hits"][0]["url"]
+
+    apiurl = f"https://stockx.com/api/products/{product_url}?includes=market,360&currency=USD&country=US"
+
+    header = {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate",
+        "accept-language": "en-US,en;q=0.9,ja-JP;q=0.8,ja;q=0.7,la;q=0.6",
+        "appos": "web",
+        "appversion": "0.1",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+    }
+    response = requests.get(apiurl, verify=True, headers=header).json()
+    general = response["Product"]
 
     embed = discord.Embed(
-        title=f"{general['title']}",
+        title=general["title"],
         url=f"https://stockx.com/{general['urlKey']}",
         color=0x099F5F,
     )
-    embed.set_thumbnail(url=results["thumbnail_url"])
+    embed.set_thumbnail(url=general["media"]["thumbUrl"])
     if "styleId" in general:
         embed.add_field(name="SKU:", value=general["styleId"], inline=True)
     else:
@@ -69,10 +75,11 @@ async def lookup_stockx(selection, keywords, ctx):
     else:
         embed.add_field(name="Retail Price:", value="N/A")
     embed.add_field(name="‎⠀", value="⠀", inline=False)
-    for size in sizes:
+    all_sizes = general["children"]
+    for size in all_sizes:
         embed.add_field(
-            name=sizes[size]["shoeSize"],
-            value=f"Lowest Ask: ${sizes[size]['market']['lowestAsk']}\nHighest Bid: ${sizes[size]['market']['highestBid']}",
+            name=all_sizes[size]["shoeSize"],
+            value=f"Lowest Ask: ${all_sizes[size]['market']['lowestAsk']}\nHighest Bid: ${all_sizes[size]['market']['highestBid']}",
             inline=True,
         )
     embed.set_footer(
@@ -168,28 +175,11 @@ async def s(ctx, *args):
     keywords = ""
     for word in args:
         keywords += word + "%20"
-    json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
-    byte_payload = bytes(json_string, "utf-8")
-    params = {
-        "x-algolia-agent": "Algolia for vanilla JavaScript 3.32.0",
-        "x-algolia-application-id": "XW7SBCT9V6",
-        "x-algolia-api-key": "6bfb5abee4dcd8cea8f0ca1ca085c2b3",
-    }
-    # used to get items using algolia api and get result
-    # stockx changed something so now they use a different method
-    # check website to see what requests are made when searching for product
-    with requests.Session() as session:
-        r = session.post(
-            "https://xw7sbct9v6-dsn.algolia.net/1/indexes/products/query",
-            params=params,
-            verify=False,
-            data=byte_payload,
-            timeout=30,
-        )
-        numResults = len(r.json()["hits"])
+    result = await scrape(keywords)
+    numResults = len(result["hits"])
 
     if numResults != 0:
-        await lookup_stockx(0, keywords, ctx)
+        await lookup_stockx(result, ctx)
     else:
         await ctx.send("No products found. Please try again.")
 
@@ -222,4 +212,4 @@ async def g(ctx, *args):
         await ctx.send("No products found. Please try again.")
 
 
-client.run(token)
+client.run(TOKEN)
