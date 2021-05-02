@@ -4,10 +4,10 @@ import json
 import requests
 import asyncio
 import os
+from dotenv import load_dotenv
 
-
-API_KEY = str(os.environ.get(API_KEY))
-TOKEN = os.environ.get(TOKEN)
+API_KEY = str(os.environ["API_KEY"])
+TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
 selected = 0
 numResults = 0
