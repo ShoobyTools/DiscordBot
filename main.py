@@ -5,8 +5,6 @@ import requests
 import asyncio
 import os
 
-load_dotenv()
-
 TOKEN = os.environ.get(TOKEN)
 client = commands.Bot(command_prefix=".")
 selected = 0
