@@ -8,7 +8,6 @@ import os
 
 load_dotenv()
 
-API_KEY = str(os.environ.get(API_KEY))
 TOKEN = os.environ.get(TOKEN)
 client = commands.Bot(command_prefix=".")
 selected = 0
@@ -29,7 +28,7 @@ async def scrape(keywords):
     algolia = {
         "x-algolia-agent": "Algolia for vanilla JavaScript 3.32.0",
         "x-algolia-application-id": "XW7SBCT9V6",
-        "x-algolia-api-key": API_KEY,
+        "x-algolia-api-key": get_api_key(),
     }
     with requests.Session() as session:
         r = session.post(
@@ -40,6 +39,23 @@ async def scrape(keywords):
             timeout=30,
         )
         return r.json()
+
+
+# stockx api key changes every 5 min so get it before every call
+def get_api_key():
+    header = {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-encoding": "gzip, deflate",
+        "accept-language": "en-US,en;q=0.9,lt;q=0.8",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+    }
+    stock_page = requests.get("https://stockx.com/", verify=True, headers=header).text
+    script = re.findall(r"window.globalConstants = .*", stock_page)[0].replace(
+        "window.globalConstants = ", ""
+    )
+    script = script.rstrip(script[-1])
+    script = json.loads(script)
+    return script["search"]["SEARCH_ONLY_API_KEY"]
 
 
 async def lookup_stockx(result, ctx):
@@ -109,7 +125,7 @@ async def lookup_goat(selection, keywords, ctx):
         r = session.post(
             "https://2fwotdvm2o-dsn.algolia.net/1/indexes/product_variants_v2/query",
             params=algolia,
-            verify=False,
+            verify=True,
             data=byte_payload,
             timeout=30,
         )
@@ -119,8 +135,8 @@ async def lookup_goat(selection, keywords, ctx):
             f"https://www.goat.com/web-api/v1/product_templates/{results['slug']}"
         )
 
-    response_prices = requests.get(apiurl_prices, verify=False, headers=header)
-    response_general = requests.get(apiurl_general, verify=False, headers=header)
+    response_prices = requests.get(apiurl_prices, verify=True, headers=header)
+    response_general = requests.get(apiurl_general, verify=True, headers=header)
 
     prices = response_prices.json()
     general = response_general.json()
@@ -200,7 +216,7 @@ async def g(ctx, *args):
         r = session.post(
             "https://2fwotdvm2o-dsn.algolia.net/1/indexes/product_variants_v2/query",
             params=algolia,
-            verify=False,
+            verify=True,
             data=byte_payload,
             timeout=30,
         )
