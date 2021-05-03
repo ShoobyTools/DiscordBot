@@ -4,6 +4,7 @@ import json
 import requests
 import asyncio
 import os
+import re
 
 TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
