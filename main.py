@@ -5,7 +5,7 @@ import requests
 import asyncio
 import os
 
-TOKEN = os.environ.get(TOKEN)
+TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
 selected = 0
 numResults = 0
