@@ -5,6 +5,8 @@ import requests
 import asyncio
 import os
 import re
+import threading
+
 
 TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
@@ -17,6 +19,7 @@ async def on_ready():
     await client.change_presence(
         activity=discord.Activity(type=discord.ActivityType.listening, name=".s and .g")
     )
+    await get_api_key()
 
 
 # scrape stockx and return a json
@@ -26,7 +29,7 @@ async def scrape(keywords):
     algolia = {
         "x-algolia-agent": "Algolia for vanilla JavaScript 3.32.0",
         "x-algolia-application-id": "XW7SBCT9V6",
-        "x-algolia-api-key": get_api_key(),
+        "x-algolia-api-key": os.environ["API_KEY"],
     }
     with requests.Session() as session:
         r = session.post(
@@ -41,6 +44,8 @@ async def scrape(keywords):
 
 # stockx api key changes every 5 min so get it before every call
 def get_api_key():
+    # run a timer in the background to get the api key every 3 minutes
+    threading.Timer(180, get_api_key).start()
     header = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         "accept-encoding": "gzip, deflate",
@@ -53,7 +58,7 @@ def get_api_key():
     )
     script = script.rstrip(script[-1])
     script = json.loads(script)
-    return script["search"]["SEARCH_ONLY_API_KEY"]
+    os.environ["API_KEY"] = script["search"]["SEARCH_ONLY_API_KEY"]
 
 
 async def lookup_stockx(result, ctx):
