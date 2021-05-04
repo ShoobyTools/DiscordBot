@@ -3,12 +3,11 @@ from discord.ext import commands
 import json
 import requests
 import asyncio
-from dotenv import load_dotenv
 import os
 import threading
 
 
-TOKEN = os.environ.get(TOKEN)
+TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
 selected = 0
 numResults = 0
