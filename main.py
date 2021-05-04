@@ -19,7 +19,7 @@ async def on_ready():
     await client.change_presence(
         activity=discord.Activity(type=discord.ActivityType.listening, name=".s and .g")
     )
-    await get_api_key()
+    get_api_key()
 
 
 # scrape stockx and return a json
