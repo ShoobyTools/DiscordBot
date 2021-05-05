@@ -6,9 +6,6 @@ import asyncio
 import os
 import re
 import threading
-from dotenv import load_dotenv
-
-load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
@@ -19,7 +16,9 @@ numResults = 0
 @client.event
 async def on_ready():
     await client.change_presence(
-        activity=discord.Activity(type=discord.ActivityType.listening, name=".s and .g")
+        activity=discord.Activity(
+            type=discord.ActivityType.listening, name=".s, .g, and .sp"
+        )
     )
     get_api_key()
 
