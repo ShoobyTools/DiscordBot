@@ -246,7 +246,7 @@ async def shoepalace(url, ctx):
     embed = discord.Embed(
         title=f"{product['title']}",
         url=sp_url,
-        color=0x00033AA,
+        color=0x37B2FA,
     )
 
     for variant in variants:
@@ -255,9 +255,12 @@ async def shoepalace(url, ctx):
             return
 
         quantity = str(variant["inventory_quantity"]).replace("-", "")
+        if quantity == "0":
+            quantity = "* "
+        content = "```md\n" + quantity + "```"
         embed.add_field(
-            name=variant["title"],
-            value=f"Quantity: {quantity}",
+            name=variant["option2"],
+            value=content,
             inline=True,
         )
 
