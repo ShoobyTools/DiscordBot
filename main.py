@@ -193,7 +193,7 @@ async def shoepalace(url, ctx):
     embed = discord.Embed(
         title=f"{product['title']}",
         url=sp_url,
-        color=0x00033AA,
+        color=0x37B2FA,
     )
 
     for variant in variants:
@@ -202,12 +202,19 @@ async def shoepalace(url, ctx):
             return
 
         quantity = str(variant["inventory_quantity"]).replace("-", "")
+        if quantity == "0":
+            quantity = "* "
+        content = "```md\n" + quantity + "```"
         embed.add_field(
-            name=variant["title"],
-            value=f"Quantity: {quantity}",
+            name=variant["option2"],
+            value=content,
             inline=True,
         )
 
+    embed.set_footer(
+        text="ShoePalace Stock",
+        icon_url="https://media.discordapp.net/attachments/734938642790744097/839648671620268032/shoepalace.png",
+    )
     await ctx.send(embed=embed)
 
 
@@ -261,35 +268,6 @@ async def g(ctx, *args):
 @client.command(pass_context=True)
 async def sp(ctx, *args):
     await shoepalace(args, ctx)
-
-
-async def shoepalace(url, ctx):
-    sp_url = re.sub(r".variant=.*", "", url[0])
-    response = requests.get(sp_url + ".json").json()
-    product = response["product"]
-    variants = product["variants"]
-    embed = discord.Embed(
-        title=f"{product['title']}",
-        url=sp_url,
-        color=0x37B2FA,
-    )
-
-    for variant in variants:
-        if variant.get("inventory_quantity") is None:
-            await ctx.send("Failed to get stock")
-            return
-
-        quantity = str(variant["inventory_quantity"]).replace("-", "")
-        if quantity == "0":
-            quantity = "* "
-        content = "```md\n" + quantity + "```"
-        embed.add_field(
-            name=variant["option2"],
-            value=content,
-            inline=True,
-        )
-
-    await ctx.send(embed=embed)
 
 
 client.run(TOKEN)
