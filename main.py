@@ -45,8 +45,8 @@ async def scrape(keywords):
 
 # stockx api key changes every 5 min so get it before every call
 def get_api_key():
-    # run a timer in the background to get the api key every 3 minutes
-    threading.Timer(180, get_api_key).start()
+    # run a timer in the background to get the api key every 5 minutes
+    threading.Timer(300, get_api_key).start()
     header = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         "accept-encoding": "gzip, deflate",
@@ -155,7 +155,7 @@ async def lookup_goat(selection, keywords, ctx):
     embed = discord.Embed(
         title=f"{general['name']}",
         url=f"https://www.goat.com/sneakers/{general['slug']}",
-        color=0x099F5F,
+        color=0xFFFFFF,
     )
     embed.set_thumbnail(url=general["gridPictureUrl"])
     if "sku" in general:
@@ -182,6 +182,32 @@ async def lookup_goat(selection, keywords, ctx):
         text="Goat",
         icon_url="https://cdn.discordapp.com/attachments/734938642790744097/771077292881477632/goat.png",
     )
+    await ctx.send(embed=embed)
+
+
+async def shoepalace(url, ctx):
+    sp_url = re.sub(r".variant=.*", "", url[0])
+    response = requests.get(sp_url + ".json").json()
+    product = response["product"]
+    variants = product["variants"]
+    embed = discord.Embed(
+        title=f"{product['title']}",
+        url=sp_url,
+        color=0x00033AA,
+    )
+
+    for variant in variants:
+        if variant.get("inventory_quantity") is None:
+            await ctx.send("Failed to get stock")
+            return
+
+        quantity = str(variant["inventory_quantity"]).replace("-", "")
+        embed.add_field(
+            name=variant["title"],
+            value=f"Quantity: {quantity}",
+            inline=True,
+        )
+
     await ctx.send(embed=embed)
 
 
@@ -235,32 +261,6 @@ async def g(ctx, *args):
 @client.command(pass_context=True)
 async def sp(ctx, *args):
     await shoepalace(args, ctx)
-
-
-async def shoepalace(url, ctx):
-    sp_url = re.sub(r".variant=.*", "", url[0])
-    response = requests.get(sp_url + ".json").json()
-    product = response["product"]
-    variants = product["variants"]
-    embed = discord.Embed(
-        title=f"{product['title']}",
-        url=sp_url,
-        color=0x00033AA,
-    )
-
-    for variant in variants:
-        if variant.get("inventory_quantity") is None:
-            await ctx.send("Failed to get stock")
-            return
-
-        quantity = str(variant["inventory_quantity"]).replace("-", "")
-        embed.add_field(
-            name=variant["title"],
-            value=f"Quantity: {quantity}",
-            inline=True,
-        )
-
-    await ctx.send(embed=embed)
 
 
 client.run(TOKEN)
