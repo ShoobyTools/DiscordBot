@@ -6,6 +6,9 @@ import asyncio
 import os
 import re
 import threading
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
@@ -190,29 +193,49 @@ async def shoepalace(url, ctx):
     response = requests.get(sp_url + ".json").json()
     product = response["product"]
     variants = product["variants"]
+    title = re.sub(r" Limit One Per Customer", "", product["title"])
     embed = discord.Embed(
-        title=f"{product['title']}",
+        title=title,
         url=sp_url,
         color=0x37B2FA,
     )
 
+    all_sizes = "```"
+    all_stock = "```md\n"
+    all_variants = "```\n"
     for variant in variants:
         if variant.get("inventory_quantity") is None:
             await ctx.send("Failed to get stock")
             return
-
         quantity = str(variant["inventory_quantity"]).replace("-", "")
         if quantity == "0":
-            quantity = "* "
-        content = "```md\n" + quantity + "```"
-        embed.add_field(
-            name=variant["option2"],
-            value=content,
-            inline=True,
-        )
+            quantity = "*"
+        all_sizes += f"{variant['option2']} \n"
+        all_stock += f"{quantity} \n"
+        all_variants += f"{variant['id']}\n"
+
+    all_sizes += "```"
+    all_stock += "```"
+    all_variants += "```"
+
+    embed.add_field(
+        name="Sizes",
+        value=all_sizes,
+        inline=True,
+    )
+    embed.add_field(
+        name="Stock",
+        value=all_stock,
+        inline=True,
+    )
+    embed.add_field(
+        name="Variants",
+        value=all_variants,
+        inline=True,
+    )
 
     embed.set_footer(
-        text="ShoePalace Stock",
+        text="ShoePalace",
         icon_url="https://media.discordapp.net/attachments/734938642790744097/839648671620268032/shoepalace.png",
     )
     await ctx.send(embed=embed)
