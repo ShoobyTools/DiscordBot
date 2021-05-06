@@ -6,9 +6,6 @@ import asyncio
 import os
 import re
 import threading
-from dotenv import load_dotenv
-
-load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
