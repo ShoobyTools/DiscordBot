@@ -200,11 +200,13 @@ async def shoepalace(url, ctx):
     all_sizes = "```"
     all_stock = "```md\n"
     all_variants = "```\n"
+    total_stock = 0
     for variant in variants:
         if variant.get("inventory_quantity") is None:
             await ctx.send("Failed to get stock")
             return
         quantity = str(variant["inventory_quantity"]).replace("-", "")
+        total_stock += int(quantity)
         if quantity == "0":
             quantity = "*"
         all_sizes += f"{variant['option2']} \n"
@@ -230,6 +232,7 @@ async def shoepalace(url, ctx):
         value=all_variants,
         inline=True,
     )
+    embed.add_field(name="Total Stock", value=f"```{total_stock}```", inline=False)
 
     embed.set_footer(
         text="ShoePalace",
