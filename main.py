@@ -176,7 +176,7 @@ async def lookup_goat(selection, keywords, ctx):
         lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
         embed.add_field(
             name=size["size"],
-            value=f"${lowestPrice}",
+            value=f"```${lowestPrice}```",
             inline=True,
         )
     embed.set_footer(
