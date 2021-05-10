@@ -6,6 +6,9 @@ import asyncio
 import os
 import re
 import threading
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
@@ -242,6 +245,45 @@ async def shoepalace(url, ctx):
     await ctx.send(embed=embed)
 
 
+async def shopnicekicks(url, ctx):
+    snk_url = re.sub(r".variant=.*", "", url[0])
+    response = requests.get(snk_url + ".json").json()
+    product = response["product"]
+    variants = product["variants"]
+    title = re.sub(r" Limit One Per Customer", "", product["title"])
+    embed = discord.Embed(
+        title=title,
+        url=snk_url,
+        color=0xFC604C,
+    )
+
+    all_sizes = "```"
+    all_variants = "```\n"
+    for variant in variants:
+        all_sizes += f"{variant['option1']} \n"
+        all_variants += f"{variant['id']}\n"
+
+    all_sizes += "```"
+    all_variants += "```"
+
+    embed.add_field(
+        name="Sizes",
+        value=all_sizes,
+        inline=True,
+    )
+    embed.add_field(
+        name="Variants",
+        value=all_variants,
+        inline=True,
+    )
+
+    embed.set_footer(
+        text="ShopNiceKicks",
+        icon_url="https://media.discordapp.net/attachments/734938642790744097/841455796210106368/snk.png",
+    )
+    await ctx.send(embed=embed)
+
+
 @client.command(pass_context=True)
 async def logout(ctx):
     await client.logout()
@@ -292,6 +334,11 @@ async def g(ctx, *args):
 @client.command(pass_context=True)
 async def sp(ctx, *args):
     await shoepalace(args, ctx)
+
+
+@client.command(pass_context=True)
+async def snk(ctx, *args):
+    await shopnicekicks(args, ctx)
 
 
 client.run(TOKEN)
