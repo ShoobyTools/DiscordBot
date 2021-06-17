@@ -210,7 +210,10 @@ async def shoepalace(url, ctx):
         total_stock += int(quantity)
         if quantity == "0":
             quantity = "*"
-        all_sizes += f"{variant['option2']} \n"
+        size = variant['option2']
+        if size == "null":
+            size = variant['option1']
+        all_sizes += f"{size} \n"
         all_stock += f"{quantity} \n"
         all_variants += f"{variant['id']}\n"
 
