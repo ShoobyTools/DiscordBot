@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import json
 import requests
-import asyncio
 import os
 import re
 import threading
@@ -164,9 +163,14 @@ async def lookup_goat(selection, keywords, ctx):
     else:
         embed.add_field(name="SKU:", value="N/A", inline=True)
     if "localizedSpecialDisplayPriceCents" in general:
+        price = int(general['localizedSpecialDisplayPriceCents']['amountUsdCents'] / 100)
+        if price == 0:
+            price = "N/A"
+        else:
+            price = "$" + str(price)
         embed.add_field(
             name="Retail Price:",
-            value=f"${int(general['localizedSpecialDisplayPriceCents']['amountUsdCents'] / 100)}",
+            value=price,
             inline=True,
         )
     else:
@@ -189,6 +193,7 @@ async def lookup_goat(selection, keywords, ctx):
 async def shoepalace(url, ctx):
     sp_url = re.sub(r".variant=.*", "", url[0])
     response = requests.get(sp_url + ".json").json()
+    write_to_json(response)
     product = response["product"]
     variants = product["variants"]
     title = re.sub(r" Limit One Per Customer", "", product["title"])
@@ -211,7 +216,7 @@ async def shoepalace(url, ctx):
         if quantity == "0":
             quantity = "*"
         size = variant['option2']
-        if size == "null":
+        if not size:
             size = variant['option1']
         all_sizes += f"{size} \n"
         all_stock += f"{quantity} \n"
