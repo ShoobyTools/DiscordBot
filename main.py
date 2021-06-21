@@ -6,20 +6,11 @@ import os
 import re
 import threading
 
-from dotenv import load_dotenv
-import json
-
-load_dotenv()
-
 TOKEN = os.environ["TOKEN"]
 client = commands.Bot(command_prefix=".")
 selected = 0
 numResults = 0
 
-
-def write_to_json(data):
-    with open('data.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
 
 @client.event
 async def on_ready():
@@ -28,7 +19,7 @@ async def on_ready():
             type=discord.ActivityType.listening, name=".s, .g, and .sp"
         )
     )
-    # get_api_key()
+    get_api_key()
 
 
 # scrape stockx and return a json
