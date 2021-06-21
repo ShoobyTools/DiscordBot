@@ -193,7 +193,6 @@ async def lookup_goat(selection, keywords, ctx):
 async def shoepalace(url, ctx):
     sp_url = re.sub(r".variant=.*", "", url[0])
     response = requests.get(sp_url + ".json").json()
-    write_to_json(response)
     product = response["product"]
     variants = product["variants"]
     title = re.sub(r" Limit One Per Customer", "", product["title"])
