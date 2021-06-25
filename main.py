@@ -5,9 +5,6 @@ import requests
 import os
 import re
 import threading
-from dotenv import load_dotenv
-
-load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
 client = discord.Client(intents=discord.Intents.all())
@@ -25,7 +22,7 @@ async def on_ready():
             type=discord.ActivityType.listening, name="Mention me for help"
         )
     )
-    # get_api_key()
+    get_api_key()
 
 @client.event
 async def on_message(message):
