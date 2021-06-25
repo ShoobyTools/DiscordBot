@@ -333,7 +333,6 @@ async def _goat(ctx, name: str):
         numResults = len(r.json()["hits"])
 
     if numResults != 0:
-        print(keywords)
         await lookup_goat(keywords, ctx)
     else:
         await ctx.send("No products found. Please try again.")
