@@ -7,9 +7,7 @@ import re
 import threading
 
 TOKEN = os.environ["TOKEN"]
-intents = discord.Intents()
-intents.messages=True
-client = discord.Client(intents=intents)
+client = discord.Client(intents=discord.Intents.all())
 slash = SlashCommand(client, sync_commands=True)
 
 selected = 0
