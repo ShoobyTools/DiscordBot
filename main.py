@@ -1,27 +1,41 @@
 import discord
-from discord.ext import commands
+from discord_slash import SlashCommand
 import json
 import requests
 import os
 import re
 import threading
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
-client = commands.Bot(command_prefix=".")
+client = discord.Client(intents=discord.Intents.all())
+slash = SlashCommand(client, sync_commands=True)
+
 selected = 0
 numResults = 0
 
+guild_ids = [734938642790744094, 403314326871474186]
 
 @client.event
 async def on_ready():
     await client.change_presence(
         activity=discord.Activity(
-            type=discord.ActivityType.listening, name=".s, .g, and .sp"
+            type=discord.ActivityType.listening, name="Mention me for help"
         )
     )
-    get_api_key()
+    # get_api_key()
 
-
+@client.event
+async def on_message(message):
+    if client.user.mentioned_in(message):
+        embed=discord.Embed(title="Price Checker instructions", description="Type `/` before any command to use it.", color=0x0008ff)
+        embed.add_field(name="StockX", value="Checks StockX for prices.", inline=False)
+        embed.add_field(name="Goat", value="Checks Goat for prices.", inline=False)
+        embed.add_field(name="Vars", value="Get Shopify variants and stock if a site has it loaded (i.e. ShoePalace)", inline=False)
+        await message.channel.send(embed=embed)
+ 
 # scrape stockx and return a json
 async def scrape(keywords):
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
@@ -109,7 +123,7 @@ async def lookup_stockx(result, ctx):
     await ctx.send(embed=embed)
 
 
-async def lookup_goat(selection, keywords, ctx):
+async def lookup_goat(keywords, ctx):
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
@@ -191,7 +205,7 @@ async def lookup_goat(selection, keywords, ctx):
 
 
 async def shoepalace(url, ctx):
-    sp_url = re.sub(r".variant=.*", "", url[0])
+    sp_url = re.sub(r".variant=.*", "", url)
     response = requests.get(sp_url + ".json").json()
     product = response["product"]
     variants = product["variants"]
@@ -249,22 +263,25 @@ async def shoepalace(url, ctx):
     await ctx.send(embed=embed)
 
 
-async def shopnicekicks(url, ctx):
-    snk_url = re.sub(r".variant=.*", "", url[0])
-    response = requests.get(snk_url + ".json").json()
+async def get_vars(url, ctx):
+    shop_url = re.sub(r".variant=.*", "", url)
+    response = requests.get(shop_url + ".json").json()
     product = response["product"]
     variants = product["variants"]
     title = re.sub(r" Limit One Per Customer", "", product["title"])
     embed = discord.Embed(
         title=title,
-        url=snk_url,
+        url=shop_url,
         color=0xFC604C,
     )
 
     all_sizes = "```"
     all_variants = "```\n"
     for variant in variants:
-        all_sizes += f"{variant['option1']} \n"
+        size = variant['option1']
+        if not size:
+            size = variant['option2']
+        all_sizes += f"{size} \n"
         all_variants += f"{variant['id']}\n"
 
     all_sizes += "```"
@@ -282,22 +299,13 @@ async def shopnicekicks(url, ctx):
     )
 
     embed.set_footer(
-        text="ShopNiceKicks",
-        icon_url="https://media.discordapp.net/attachments/734938642790744097/841455796210106368/snk.png",
+        text="Shopify Variants"
     )
     await ctx.send(embed=embed)
 
-
-@client.command(pass_context=True)
-async def logout(ctx):
-    await client.logout()
-
-
-@client.command(pass_context=True)
-async def s(ctx, *args):
-    keywords = ""
-    for word in args:
-        keywords += word + "%20"
+@slash.slash(name="StockX", description="Check StockX prices", guild_ids=guild_ids)
+async def _stockx(ctx, name: str):
+    keywords = name.replace(" ", "%20")
     result = await scrape(keywords)
     numResults = len(result["hits"])
 
@@ -307,11 +315,9 @@ async def s(ctx, *args):
         await ctx.send("No products found. Please try again.")
 
 
-@client.command(pass_context=True)
-async def g(ctx, *args):
-    keywords = ""
-    for word in args:
-        keywords += word + "%20"
+@slash.slash(name="Goat", description="Check Goat prices", guild_ids=guild_ids)
+async def _goat(ctx, name: str):
+    keywords = name.replace(" ", "%20")
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
@@ -330,19 +336,16 @@ async def g(ctx, *args):
         numResults = len(r.json()["hits"])
 
     if numResults != 0:
-        await lookup_goat(0, keywords, ctx)
+        print(keywords)
+        await lookup_goat(keywords, ctx)
     else:
         await ctx.send("No products found. Please try again.")
 
-
-@client.command(pass_context=True)
-async def sp(ctx, *args):
-    await shoepalace(args, ctx)
-
-
-@client.command(pass_context=True)
-async def snk(ctx, *args):
-    await shopnicekicks(args, ctx)
-
+@slash.slash(name="Vars", description="Get Shopify variants", guild_ids=guild_ids)
+async def _variants(ctx, link):
+    if "www.shoepalace.com" in link:
+        await shoepalace(link, ctx)
+    else:
+        await get_vars(link, ctx)
 
 client.run(TOKEN)
