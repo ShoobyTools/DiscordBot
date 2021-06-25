@@ -13,7 +13,7 @@ slash = SlashCommand(client, sync_commands=True)
 selected = 0
 numResults = 0
 
-guild_ids = [734938642790744094, 403314326871474186]
+guild_ids = [403314326871474186, 734938642790744094]
 
 @client.event
 async def on_ready():
