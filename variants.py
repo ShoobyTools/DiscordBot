@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import requests
 import discord
 import re
@@ -8,14 +7,14 @@ async def get_size(input):
         try:
             a = float(input)   
         except (TypeError, ValueError):
-            return NULL
+            return None
         else:
             if a.is_integer():
                 return int(a)
             else:
                 return a
     else:
-        return NULL
+        return None
 
 async def shoepalace(url, ctx):
     sp_url = re.sub(r".variant=.*", "", url)

@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import discord
 from discord_slash import SlashCommand
 import json
@@ -29,7 +28,7 @@ async def on_ready():
             type=discord.ActivityType.listening, name="Mention me for help"
         )
     )
-    # stockx.get_api_key()
+    stockx.get_api_key()
 
 @client.event
 async def on_message(message):
