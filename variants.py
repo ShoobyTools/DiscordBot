@@ -1,7 +1,21 @@
+from asyncio.windows_events import NULL
 import requests
 import discord
 import re
 
+async def get_size(input):
+    if input:
+        try:
+            a = float(input)   
+        except (TypeError, ValueError):
+            return NULL
+        else:
+            if a.is_integer():
+                return int(a)
+            else:
+                return a
+    else:
+        return NULL
 
 async def shoepalace(url, ctx):
     sp_url = re.sub(r".variant=.*", "", url)
@@ -78,9 +92,11 @@ async def get_vars(url, ctx):
     all_sizes = "```"
     all_variants = "```\n"
     for variant in variants:
-        size = variant["option1"]
+        size = await get_size(variant["option1"])
         if not size:
-            size = variant["option2"]
+            size = await get_size(variant["option2"])
+        if not size:
+            size = await get_size(variant["option3"])
         all_sizes += f"{size} \n"
         all_variants += f"{variant['id']}\n"
 
