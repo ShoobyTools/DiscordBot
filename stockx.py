@@ -70,9 +70,19 @@ async def get_stockx_prices(name, ctx):
         embed.add_field(name="Retail Price:", value="N/A", inline=True)
     all_sizes = general["children"]
     for size in all_sizes:
+        ask = all_sizes[size]['market']['lowestAsk']
+        bid = all_sizes[size]['market']['highestBid']
+        if ask == 0:
+            ask = "N/A"
+        else:
+            ask = "$" + str(ask)
+        if bid == 0:
+            bid = "N/A"
+        else:
+            bid = "$" + str(bid)
         embed.add_field(
             name=all_sizes[size]["shoeSize"],
-            value=f"```bash\nAsk: ${all_sizes[size]['market']['lowestAsk']}\nBid: ${all_sizes[size]['market']['highestBid']}```",
+            value=f"```bash\nAsk: {ask}\nBid: {bid}```",
             inline=True,
         )
     embed.set_footer(
