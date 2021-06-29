@@ -76,6 +76,9 @@ async def shoepalace(url, ctx):
 
 
 async def get_vars(url, ctx):
+    if "www.shoepalace.com" in url:
+        await shoepalace(url, ctx)
+        return
     shop_url = re.sub(r".variant=.*", "", url)
     response = requests.get(shop_url + ".json").json()
     product = response["product"]

@@ -3,7 +3,29 @@ import json
 import discord
 
 
-async def lookup_goat(keywords, ctx):
+async def lookup_goat(name, ctx):
+    keywords = name.replace(" ", "%20")
+    json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
+    byte_payload = bytes(json_string, "utf-8")
+    algolia = {
+        "x-algolia-agent": "Algolia for vanilla JavaScript 3.25.1",
+        "x-algolia-application-id": "2FWOTDVM2O",
+        "x-algolia-api-key": "ac96de6fef0e02bb95d433d8d5c7038a",
+    }
+    with requests.Session() as session:
+        r = session.post(
+            "https://2fwotdvm2o-dsn.algolia.net/1/indexes/product_variants_v2/query",
+            params=algolia,
+            verify=True,
+            data=byte_payload,
+            timeout=30,
+        )
+        numResults = len(r.json()["hits"])
+
+    if numResults == 0:
+        await ctx.send("No products found. Please try again.")
+        return
+    
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
