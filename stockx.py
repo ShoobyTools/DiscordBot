@@ -1,12 +1,10 @@
-import threading
 import requests
 import json
-import re
 import discord
-import os
+
 
 # scrape stockx and return a json
-async def scrape(keywords):
+async def scrape(keywords) -> json:
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
@@ -24,28 +22,8 @@ async def scrape(keywords):
         )
         return r.json()
 
-# stockx api key changes every 5 min so get it before every call
-def get_api_key():
-    # run a timer in the background to get the api key every 5 minutes
-    threading.Timer(300, get_api_key).start()
-    header = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "accept-encoding": "gzip, deflate",
-        "accept-language": "en-US,en;q=0.9,lt;q=0.8",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
-    }
-    stock_page = requests.get("https://stockx.com/", verify=True, headers=header).text
-    script = re.findall(r"window.globalConstants = .*", stock_page)
-
-    if len(script) != 0:
-        script = script[0].replace("window.globalConstants = ", "")
-        script = script.rstrip(script[-1])
-        script = json.loads(script)
-        os.environ["API_KEY"] = script["search"]["SEARCH_ONLY_API_KEY"]
-
 
 async def lookup_stockx(name, ctx):
-    get_api_key()
     keywords = name.replace(" ", "%20")
     result = await scrape(keywords)
 
@@ -70,7 +48,7 @@ async def lookup_stockx(name, ctx):
     response = response.json()
     general = response["Product"]
 
-    with open('data.json', 'w', encoding='utf-8') as f:
+    with open("data.json", "w", encoding="utf-8") as f:
         json.dump(general, f, ensure_ascii=False, indent=4)
 
     embed = discord.Embed(
@@ -88,13 +66,13 @@ async def lookup_stockx(name, ctx):
             name="Retail Price:", value=f"${general['retailPrice']}", inline=True
         )
     else:
-        embed.add_field(name="Retail Price:", value="N/A")
-    embed.add_field(name="‎⠀", value="⠀", inline=False)
+        embed.add_field(name="Retail Price:", value="N/A", inline=True)
+    embed.add_field(name="⠀", value="⠀", inline=True)
     all_sizes = general["children"]
     for size in all_sizes:
         embed.add_field(
             name=all_sizes[size]["shoeSize"],
-            value=f"Lowest Ask: ${all_sizes[size]['market']['lowestAsk']}\nHighest Bid: ${all_sizes[size]['market']['highestBid']}",
+            value=f"```bash\nAsk: ${all_sizes[size]['market']['lowestAsk']}\nBid: ${all_sizes[size]['market']['highestBid']}```",
             inline=True,
         )
     embed.set_footer(
