@@ -2,10 +2,11 @@ import requests
 import discord
 import re
 
+
 async def get_size(input):
     if input:
         try:
-            a = float(input)   
+            a = float(input)
         except (TypeError, ValueError):
             return None
         else:
@@ -15,6 +16,7 @@ async def get_size(input):
                 return a
     else:
         return None
+
 
 async def shoepalace(url, ctx):
     sp_url = re.sub(r".variant=.*", "", url)
@@ -76,6 +78,9 @@ async def shoepalace(url, ctx):
 
 
 async def get_vars(url, ctx):
+    if "shoepalace" in url:
+        await shoepalace(url, ctx)
+        return
     shop_url = re.sub(r".variant=.*", "", url)
     response = requests.get(shop_url + ".json").json()
     product = response["product"]

@@ -1,45 +1,55 @@
-import threading
 import requests
 import json
-import re
 import discord
-import os
 
-# stockx api key changes every 5 min so get it before every call
-def get_api_key():
-    # run a timer in the background to get the api key every 5 minutes
-    threading.Timer(300, get_api_key).start()
-    header = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "accept-encoding": "gzip, deflate",
-        "accept-language": "en-US,en;q=0.9,lt;q=0.8",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+
+# scrape stockx and return a json
+async def scrape(keywords) -> json:
+    json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
+    byte_payload = bytes(json_string, "utf-8")
+    algolia = {
+        "x-algolia-agent": "Algolia for vanilla JavaScript 3.32.0",
+        "x-algolia-application-id": "XW7SBCT9V6",
+        "x-algolia-api-key": "ZGRhZGYwNzIxMjJkNTgzMTc4OTNkYTRlZTkzNTlmMTRhNTViZDVmNTgzZWQyMDhkNWE1ZDA2YWE2OWZkOTM3NXZhbGlkVW50aWw9MTYyNTEwOTI4OQ==",
     }
-    stock_page = requests.get("https://stockx.com/", verify=True, headers=header).text
-    script = re.findall(r"window.globalConstants = .*", stock_page)
+    with requests.Session() as session:
+        r = session.post(
+            "https://xw7sbct9v6-dsn.algolia.net/1/indexes/products/query",
+            params=algolia,
+            verify=True,
+            data=byte_payload,
+            timeout=30,
+        )
+        return r.json()
 
-    if len(script) != 0:
-        script = script[0].replace("window.globalConstants = ", "")
-        script = script.rstrip(script[-1])
-        script = json.loads(script)
-        os.environ["API_KEY"] = script["search"]["SEARCH_ONLY_API_KEY"]
 
+async def get_stockx_prices(name, ctx):
+    keywords = name.replace(" ", "%20")
+    result = await scrape(keywords)
 
-async def lookup_stockx(result, ctx):
+    if len(result["hits"]) == 0:
+        await ctx.send("No products found. Please try again.")
+        return
+
     product_url = result["hits"][0]["url"]
 
     apiurl = f"https://stockx.com/api/products/{product_url}?includes=market,360&currency=USD&country=US"
 
     header = {
-        "accept": "*/*",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "accept-encoding": "gzip, deflate",
-        "accept-language": "en-US,en;q=0.9,ja-JP;q=0.8,ja;q=0.7,la;q=0.6",
-        "appos": "web",
-        "appversion": "0.1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+        "referer": f"https://stockx.com/{product_url}",
     }
-    response = requests.get(apiurl, verify=True, headers=header).json()
+
+    response = requests.get(apiurl, verify=True, headers=header)
+    if response.status_code == 403:
+        await ctx.send("Error accessing StockX site (ERROR 403)")
+        return
+    response = response.json()
     general = response["Product"]
+
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(general, f, ensure_ascii=False, indent=4)
 
     embed = discord.Embed(
         title=general["title"],
@@ -51,18 +61,18 @@ async def lookup_stockx(result, ctx):
         embed.add_field(name="SKU:", value=general["styleId"], inline=True)
     else:
         embed.add_field(name="SKU:", value="N/A", inline=True)
+    embed.add_field(name="⠀", value="⠀", inline=True)
     if "retailPrice" in general:
         embed.add_field(
             name="Retail Price:", value=f"${general['retailPrice']}", inline=True
         )
     else:
-        embed.add_field(name="Retail Price:", value="N/A")
-    embed.add_field(name="‎⠀", value="⠀", inline=False)
+        embed.add_field(name="Retail Price:", value="N/A", inline=True)
     all_sizes = general["children"]
     for size in all_sizes:
         embed.add_field(
             name=all_sizes[size]["shoeSize"],
-            value=f"Lowest Ask: ${all_sizes[size]['market']['lowestAsk']}\nHighest Bid: ${all_sizes[size]['market']['highestBid']}",
+            value=f"```bash\nAsk: ${all_sizes[size]['market']['lowestAsk']}\nBid: ${all_sizes[size]['market']['highestBid']}```",
             inline=True,
         )
     embed.set_footer(

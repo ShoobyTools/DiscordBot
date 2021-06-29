@@ -3,21 +3,14 @@ import json
 import discord
 
 
-async def lookup_goat(keywords, ctx):
+# scrape goat and return a json
+async def scrape(keywords) -> json:
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
         "x-algolia-agent": "Algolia for vanilla JavaScript 3.25.1",
         "x-algolia-application-id": "2FWOTDVM2O",
         "x-algolia-api-key": "ac96de6fef0e02bb95d433d8d5c7038a",
-    }
-    header = {
-        "accept": "*/*",
-        "accept-encoding": "gzip, deflate, br",
-        "accept-language": "en-US,en;q=0.9,lt;q=0.8",
-        "appos": "web",
-        "appversion": "0.1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36",
     }
     with requests.Session() as session:
         r = session.post(
@@ -27,17 +20,35 @@ async def lookup_goat(keywords, ctx):
             data=byte_payload,
             timeout=30,
         )
-        results = r.json()["hits"][0]
-        apiurl_prices = f"https://www.goat.com/web-api/v1/product_variants?productTemplateId={results['slug']}"
-        apiurl_general = (
-            f"https://www.goat.com/web-api/v1/product_templates/{results['slug']}"
-        )
+    return r.json()
 
-    response_prices = requests.get(apiurl_prices, verify=True, headers=header)
-    response_general = requests.get(apiurl_general, verify=True, headers=header)
 
-    prices = response_prices.json()
-    general = response_general.json()
+async def get_goat_prices(name, ctx):
+    keywords = name.replace(" ", "%20")
+    results = await scrape(keywords)
+
+    if len(results["hits"]) == 0:
+        await ctx.send("No products found. Please try again.")
+        return
+
+    header = {
+        "accept-encoding": "gzip, deflate, br",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36",
+    }
+
+    results = results["hits"][0]
+
+    apiurl_prices = f"https://www.goat.com/web-api/v1/product_variants?productTemplateId={results['slug']}"
+    apiurl_general = (
+        f"https://www.goat.com/web-api/v1/product_templates/{results['slug']}"
+    )
+
+    prices = requests.get(apiurl_prices, verify=True, headers=header)
+    general = requests.get(apiurl_general, verify=True, headers=header)
+
+    prices = prices.json()
+    general = general.json()
+
     sizes = []
     for size in prices:
         if (
@@ -56,6 +67,7 @@ async def lookup_goat(keywords, ctx):
         embed.add_field(name="SKU:", value=general["sku"], inline=True)
     else:
         embed.add_field(name="SKU:", value="N/A", inline=True)
+    embed.add_field(name="⠀", value="⠀", inline=True)
     if "localizedSpecialDisplayPriceCents" in general:
         price = int(
             general["localizedSpecialDisplayPriceCents"]["amountUsdCents"] / 100
@@ -71,12 +83,12 @@ async def lookup_goat(keywords, ctx):
         )
     else:
         embed.add_field(name="Retail Price:", value="N/A")
-    embed.add_field(name="‎⠀", value="⠀", inline=False)
+
     for size in sizes:
         lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
         embed.add_field(
             name=size["size"],
-            value=f"```${lowestPrice}```",
+            value=f"```bash\n${lowestPrice}```",
             inline=True,
         )
     embed.set_footer(
