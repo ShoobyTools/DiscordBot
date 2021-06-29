@@ -23,7 +23,7 @@ async def scrape(keywords) -> json:
         return r.json()
 
 
-async def lookup_stockx(name, ctx):
+async def get_stockx_prices(name, ctx):
     keywords = name.replace(" ", "%20")
     result = await scrape(keywords)
 
@@ -43,7 +43,7 @@ async def lookup_stockx(name, ctx):
 
     response = requests.get(apiurl, verify=True, headers=header)
     if response.status_code == 403:
-        print("ACCESS DENIED")
+        await ctx.send("Error accessing StockX site (ERROR 403)")
         return
     response = response.json()
     general = response["Product"]
@@ -61,13 +61,13 @@ async def lookup_stockx(name, ctx):
         embed.add_field(name="SKU:", value=general["styleId"], inline=True)
     else:
         embed.add_field(name="SKU:", value="N/A", inline=True)
+    embed.add_field(name="⠀", value="⠀", inline=True)
     if "retailPrice" in general:
         embed.add_field(
             name="Retail Price:", value=f"${general['retailPrice']}", inline=True
         )
     else:
         embed.add_field(name="Retail Price:", value="N/A", inline=True)
-    embed.add_field(name="⠀", value="⠀", inline=True)
     all_sizes = general["children"]
     for size in all_sizes:
         embed.add_field(

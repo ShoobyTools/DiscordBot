@@ -23,7 +23,7 @@ async def scrape(keywords) -> json:
     return r.json()
 
 
-async def lookup_goat(name, ctx):
+async def get_goat_prices(name, ctx):
     keywords = name.replace(" ", "%20")
     results = await scrape(keywords)
 
@@ -67,6 +67,7 @@ async def lookup_goat(name, ctx):
         embed.add_field(name="SKU:", value=general["sku"], inline=True)
     else:
         embed.add_field(name="SKU:", value="N/A", inline=True)
+    embed.add_field(name="⠀", value="⠀", inline=True)
     if "localizedSpecialDisplayPriceCents" in general:
         price = int(
             general["localizedSpecialDisplayPriceCents"]["amountUsdCents"] / 100
@@ -82,7 +83,7 @@ async def lookup_goat(name, ctx):
         )
     else:
         embed.add_field(name="Retail Price:", value="N/A")
-    embed.add_field(name="⠀", value="⠀", inline=True)
+
     for size in sizes:
         lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
         embed.add_field(

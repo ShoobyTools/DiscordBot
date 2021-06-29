@@ -1,7 +1,5 @@
 import discord
 from discord_slash import SlashCommand
-import json
-import requests
 import os
 from dotenv import load_dotenv
 
@@ -54,12 +52,12 @@ async def _help(ctx):
 
 @slash.slash(name="StockX", description="Check StockX prices", guild_ids=GUILD_ID)
 async def _stockx(ctx, name: str):
-    await stockx.lookup_stockx(name, ctx)
+    await stockx.get_stockx_prices(name, ctx)
 
 
 @slash.slash(name="Goat", description="Check Goat prices", guild_ids=GUILD_ID)
 async def _goat(ctx, name: str):
-    await goat.lookup_goat(name, ctx)
+    await goat.get_goat_prices(name, ctx)
 
 
 @slash.slash(name="Vars", description="Get Shopify variants", guild_ids=GUILD_ID)
