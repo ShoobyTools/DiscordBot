@@ -1,7 +1,7 @@
 import requests
 import json
-import discord
 
+import embed
 
 # scrape goat and return a json
 async def scrape(keywords) -> json:
@@ -23,7 +23,7 @@ async def scrape(keywords) -> json:
     return r.json()
 
 
-async def get_goat_prices(name, ctx):
+async def get_prices(name, ctx):
     keywords = name.replace(" ", "%20")
     results = await scrape(keywords)
 
@@ -43,31 +43,40 @@ async def get_goat_prices(name, ctx):
         f"https://www.goat.com/web-api/v1/product_templates/{results['slug']}"
     )
 
-    prices = requests.get(apiurl_prices, verify=True, headers=header)
+    options = requests.get(apiurl_prices, verify=True, headers=header)
     general = requests.get(apiurl_general, verify=True, headers=header)
 
-    prices = prices.json()
+    options = options.json()
     general = general.json()
 
     sizes = []
-    for size in prices:
+    for size in options:
         if (
             size["boxCondition"] == "good_condition"
             and size["shoeCondition"] == "new_no_defects"
         ):
             sizes.append(size)
+    prices = {}
+    info = {
+        "title": general['name'],
+        "url": f"https://www.goat.com/sneakers/{general['slug']}",
+        "thumbnail": general["gridPictureUrl"],
+        "sku": "N/A",
+        "retail price": "N/A",
+        "sizes": {
+            "asks and bids": False,
+            "one size": False,
+            "prices": prices
+        },
+        "color": 0xFFFFFE,
+        "footer text": "Goat",
+        "footer image": "https://cdn.discordapp.com/attachments/734938642790744097/771077292881477632/goat.png"
+    }
 
-    embed = discord.Embed(
-        title=f"{general['name']}",
-        url=f"https://www.goat.com/sneakers/{general['slug']}",
-        color=0xFFFFFE,
-    )
-    embed.set_thumbnail(url=general["gridPictureUrl"])
+
     if "sku" in general:
-        embed.add_field(name="SKU:", value=general["sku"], inline=True)
-    else:
-        embed.add_field(name="SKU:", value="N/A", inline=True)
-    embed.add_field(name="⠀", value="⠀", inline=True)
+        info["sku"]=general["sku"]
+
     if "localizedSpecialDisplayPriceCents" in general:
         price = int(
             general["localizedSpecialDisplayPriceCents"]["amountUsdCents"] / 100
@@ -76,23 +85,12 @@ async def get_goat_prices(name, ctx):
             price = "N/A"
         else:
             price = "$" + str(price)
-        embed.add_field(
-            name="Retail Price:",
-            value=price,
-            inline=True,
-        )
-    else:
-        embed.add_field(name="Retail Price:", value="N/A")
+        info["retail price"] = price
 
     for size in sizes:
         lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
-        embed.add_field(
-            name=size["size"],
-            value=f"```bash\n${lowestPrice}```",
-            inline=True,
-        )
-    embed.set_footer(
-        text="Goat",
-        icon_url="https://cdn.discordapp.com/attachments/734938642790744097/771077292881477632/goat.png",
-    )
-    await ctx.send(embed=embed)
+        info["sizes"]["prices"][str(size["size"])] = {
+            "price": f"```bash\n${lowestPrice}```"
+        }
+
+    await embed.send(info, ctx)
