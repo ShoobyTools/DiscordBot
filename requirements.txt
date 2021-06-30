@@ -2,3 +2,4 @@ discord.py
 discord-py-slash-command
 requests
 python-dotenv
+bs4
