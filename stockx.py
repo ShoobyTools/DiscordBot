@@ -1,7 +1,7 @@
 import requests
 import json
-import discord
 
+import embed
 
 # scrape stockx and return a json
 async def scrape(keywords) -> json:
@@ -23,7 +23,7 @@ async def scrape(keywords) -> json:
         return r.json()
 
 
-async def get_stockx_prices(name, ctx):
+async def get_prices(name, ctx):
     keywords = name.replace(" ", "%20")
     result = await scrape(keywords)
 
@@ -48,14 +48,37 @@ async def get_stockx_prices(name, ctx):
     response = response.json()
     general = response["Product"]
 
+    prices = {}
+    for child in general["children"]:
+        current_size = general["children"][child]
+        ask = current_size["market"]["lowestAsk"]
+        bid = current_size["market"]["highestBid"]
+        if ask == 0:
+            ask = "N/A"
+        else:
+            ask = "$" + str(ask)
+        if bid == 0:
+            bid = "N/A"
+        else:
+            bid = "$" + str(bid)
+        prices[current_size["shoeSize"]] = {
+            "ask": f"```bash\nAsk: {ask}",
+            "bid": f"Bid: {bid}```"
+        }
     info = {
         "title": general["title"],
         "url": f"https://stockx.com/{general['urlKey']}",
         "thumbnail": general["media"]["thumbUrl"],
         "sku": "N/A",
-        "retail_price": "N/A",
-        "multiple_sizes": True,
-        "sizes": general["children"],
+        "retail price": "N/A",
+        "sizes": {
+            "asks and bids": True,
+            "one size": False,
+            "prices": prices
+        },
+        "color": 0x099F5F,
+        "footer text": "Goat",
+        "footer image": "https://cdn.discordapp.com/attachments/734938642790744097/771078700178866226/stockx.png"
     }
 
     product_type = general["contentGroup"]
@@ -63,67 +86,19 @@ async def get_stockx_prices(name, ctx):
         if "styleId" in general:
             info["sku"] = general["styleId"]
         if "retailPrice" in general:
-            info["retail_price"] = f"${general['retailPrice']}"
+            info["retail price"] = f"${general['retailPrice']}"
     elif product_type == "streetwear-clothing":
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
         if retail_price:
-            info["retail_price"] = f"${retail_price['value']}"
+            info["retail price"] = f"${retail_price['value']}"
     elif product_type == "collectibles":
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
         if retail_price:
-            info["retail_price"] = f"${retail_price['value']}"
-        info["multiple_sizes"] = False
-        info["sizes"] = general["market"]
+            info["retail price"] = f"${retail_price['value']}"
+        info["one size"] = True
+    await embed.send(info, ctx)
 
-    await send_embed(info, ctx)
-
-
-async def send_embed(info: dict, ctx):
-    embed = discord.Embed(
-        title=info["title"],
-        url=info["url"],
-        color=0x099F5F,
-    )
-    embed.set_thumbnail(url=info["thumbnail"])
-    embed.add_field(name="SKU:", value=info["sku"], inline=True)
-    embed.add_field(name="⠀", value="⠀", inline=True)
-    embed.add_field(name="Retail Price:", value=info["retail_price"], inline=True)
-    if info["multiple_sizes"]:
-        for size in info["sizes"]:
-            ask = info["sizes"][size]["market"]["lowestAsk"]
-            bid = info["sizes"][size]["market"]["highestBid"]
-            if ask == 0:
-                ask = "N/A"
-            else:
-                ask = "$" + str(ask)
-            if bid == 0:
-                bid = "N/A"
-            else:
-                bid = "$" + str(bid)
-            embed.add_field(
-                name=info["sizes"][size]["shoeSize"],
-                value=f"```bash\nAsk: {ask}\nBid: {bid}```",
-                inline=True,
-            )
-    else:
-        ask = info["sizes"]["lowestAsk"]
-        bid = info["sizes"]["highestBid"]
-        embed.add_field(
-            name="Ask",
-            value=f"```bash\n${ask}```",
-            inline=True,
-        )
-        embed.add_field(
-            name="Bid",
-            value=f"```bash\n${bid}```",
-            inline=True,
-        )
-    embed.set_footer(
-        text="StockX",
-        icon_url="https://cdn.discordapp.com/attachments/734938642790744097/771078700178866226/stockx.png",
-    )
-    await ctx.send(embed=embed)

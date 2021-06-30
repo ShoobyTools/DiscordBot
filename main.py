@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 import stockx
 import goat
+import stadium_goods
 import variants
 
 
@@ -52,17 +53,19 @@ async def _help(ctx):
 
 @slash.slash(name="StockX", description="Check StockX prices", guild_ids=GUILD_ID)
 async def _stockx(ctx, name: str):
-    await stockx.get_stockx_prices(name, ctx)
+    await stockx.get_prices(name, ctx)
 
 
 @slash.slash(name="Goat", description="Check Goat prices", guild_ids=GUILD_ID)
 async def _goat(ctx, name: str):
-    await goat.get_goat_prices(name, ctx)
+    await goat.get_prices(name, ctx)
 
+@slash.slash(name="SG", description="Check Stadium Goods prices", guild_ids=GUILD_ID)
+async def sg(ctx, name: str):
+    await stadium_goods.get_prices(name, ctx)
 
 @slash.slash(name="Vars", description="Get Shopify variants", guild_ids=GUILD_ID)
 async def _variants(ctx, link):
     await variants.get_vars(link, ctx)
-
 
 client.run(TOKEN)
