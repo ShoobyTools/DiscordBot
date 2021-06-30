@@ -76,7 +76,7 @@ async def get_prices(name, ctx):
     all_sizes = soup.find("div", {"class": "product-sizes__options"}).find_all("span", {"class" : "product-sizes__detail"})
     prices = []
     for option in all_sizes:
-        size = int_or_float(option.find("span", {"class" :"product-sizes__size"}).text.strip("\n"))
+        size = int_or_float(option.find("span", {"class" :"product-sizes__size"}).text.strip("\n").replace("Y", ""))
         price = option.find("span", {"class" :"product-sizes__price"}).text.strip("\n")
         if "Notify me" in price:
             price = "N/A"
