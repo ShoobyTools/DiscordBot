@@ -45,6 +45,9 @@ async def get_prices(name, ctx):
     )
 
     data = r.json()
+    if len(data["data"]["configurableProducts"]["edges"]) == 0:
+        await ctx.send("No products found. Please try again.")
+        return
     data = data["data"]["configurableProducts"]["edges"][0]["node"]
 
     prices = {}
