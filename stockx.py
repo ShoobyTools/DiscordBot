@@ -48,41 +48,78 @@ async def get_stockx_prices(name, ctx):
     response = response.json()
     general = response["Product"]
 
-    with open("data.json", "w", encoding="utf-8") as f:
-        json.dump(general, f, ensure_ascii=False, indent=4)
+    info = {
+        "title": general["title"],
+        "url": f"https://stockx.com/{general['urlKey']}",
+        "thumbnail": general["media"]["thumbUrl"],
+        "sku": "N/A",
+        "retail_price": "N/A",
+        "multiple_sizes": True,
+        "sizes": general["children"],
+    }
 
+    product_type = general["contentGroup"]
+    if product_type == "sneakers":
+        if "styleId" in general:
+            info["sku"] = general["styleId"]
+        if "retailPrice" in general:
+            info["retail_price"] = f"${general['retailPrice']}"
+    elif product_type == "streetwear-clothing":
+        retail_price = next(
+            (item for item in general["traits"] if item["name"] == "Retail"), None
+        )
+        if retail_price:
+            info["retail_price"] = f"${retail_price['value']}"
+    elif product_type == "collectibles":
+        retail_price = next(
+            (item for item in general["traits"] if item["name"] == "Retail"), None
+        )
+        if retail_price:
+            info["retail_price"] = f"${retail_price['value']}"
+        info["multiple_sizes"] = False
+        info["sizes"] = general["market"]
+
+    await send_embed(info, ctx)
+
+
+async def send_embed(info: dict, ctx):
     embed = discord.Embed(
-        title=general["title"],
-        url=f"https://stockx.com/{general['urlKey']}",
+        title=info["title"],
+        url=info["url"],
         color=0x099F5F,
     )
-    embed.set_thumbnail(url=general["media"]["thumbUrl"])
-    if "styleId" in general:
-        embed.add_field(name="SKU:", value=general["styleId"], inline=True)
-    else:
-        embed.add_field(name="SKU:", value="N/A", inline=True)
+    embed.set_thumbnail(url=info["thumbnail"])
+    embed.add_field(name="SKU:", value=info["sku"], inline=True)
     embed.add_field(name="⠀", value="⠀", inline=True)
-    if "retailPrice" in general:
-        embed.add_field(
-            name="Retail Price:", value=f"${general['retailPrice']}", inline=True
-        )
+    embed.add_field(name="Retail Price:", value=info["retail_price"], inline=True)
+    if info["multiple_sizes"]:
+        for size in info["sizes"]:
+            ask = info["sizes"][size]["market"]["lowestAsk"]
+            bid = info["sizes"][size]["market"]["highestBid"]
+            if ask == 0:
+                ask = "N/A"
+            else:
+                ask = "$" + str(ask)
+            if bid == 0:
+                bid = "N/A"
+            else:
+                bid = "$" + str(bid)
+            embed.add_field(
+                name=info["sizes"][size]["shoeSize"],
+                value=f"```bash\nAsk: {ask}\nBid: {bid}```",
+                inline=True,
+            )
     else:
-        embed.add_field(name="Retail Price:", value="N/A", inline=True)
-    all_sizes = general["children"]
-    for size in all_sizes:
-        ask = all_sizes[size]['market']['lowestAsk']
-        bid = all_sizes[size]['market']['highestBid']
-        if ask == 0:
-            ask = "N/A"
-        else:
-            ask = "$" + str(ask)
-        if bid == 0:
-            bid = "N/A"
-        else:
-            bid = "$" + str(bid)
+        ask = info["sizes"]["lowestAsk"]
+        bid = info["sizes"]["highestBid"]
         embed.add_field(
-            name=all_sizes[size]["shoeSize"],
-            value=f"```bash\nAsk: {ask}\nBid: {bid}```",
+            name="Ask",
+            value=f"```bash\n${ask}```",
+            inline=True,
+        )
+        embed.add_field(
+            name="Bid",
+            value=f"```bash\n${bid}```",
             inline=True,
         )
     embed.set_footer(
