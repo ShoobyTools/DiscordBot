@@ -49,13 +49,7 @@ async def get_prices(name, ctx):
     options = options.json()
     general = general.json()
 
-    sizes = []
-    for size in options:
-        if (
-            size["boxCondition"] == "good_condition"
-            and size["shoeCondition"] == "new_no_defects"
-        ):
-            sizes.append(size)
+
     prices = {}
     info = {
         "title": general['name'],
@@ -72,10 +66,16 @@ async def get_prices(name, ctx):
         "footer text": "Goat",
         "footer image": "https://cdn.discordapp.com/attachments/734938642790744097/771077292881477632/goat.png"
     }
-
+    for size in options:
+        if (
+            size["boxCondition"] == "good_condition"
+            and size["shoeCondition"] == "new_no_defects"
+        ):
+            lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
+            info["sizes"]["prices"][str(size["size"])] = f"```bash\n${lowestPrice}```"
 
     if "sku" in general:
-        info["sku"]=general["sku"]
+        info["sku"]=general["sku"].replace(" ", "-")
 
     if "localizedSpecialDisplayPriceCents" in general:
         price = int(
@@ -87,10 +87,5 @@ async def get_prices(name, ctx):
             price = "$" + str(price)
         info["retail price"] = price
 
-    for size in sizes:
-        lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
-        info["sizes"]["prices"][str(size["size"])] = {
-            "price": f"```bash\n${lowestPrice}```"
-        }
 
     await embed.send(info, ctx)

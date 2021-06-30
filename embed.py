@@ -36,7 +36,7 @@ async def send(info: dict, ctx):
         for size in prices:
             embed.add_field(
                 name=size,
-                value=prices[size]["price"],
+                value=prices[size],
                 inline=True,
             )
     embed.set_footer(

@@ -61,8 +61,8 @@ async def _goat(ctx, name: str):
     await goat.get_prices(name, ctx)
 
 @slash.slash(name="SG", description="Check Stadium Goods prices", guild_ids=GUILD_ID)
-async def sg(ctx, link):
-    await stadium_goods.get_prices(link, ctx)
+async def sg(ctx, name: str):
+    await stadium_goods.get_prices(name, ctx)
 
 @slash.slash(name="Vars", description="Get Shopify variants", guild_ids=GUILD_ID)
 async def _variants(ctx, link):
