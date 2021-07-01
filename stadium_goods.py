@@ -62,7 +62,7 @@ async def get_prices(name, ctx):
             "one size": False,
             "prices": prices
         },
-        "color": 0xFFFFFE,
+        "color": 0xFFA500,
         "footer text": "Stadium Goods",
         "footer image": "https://media.discordapp.net/attachments/734938642790744097/859866121033089064/sg.jpg"
     }

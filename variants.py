@@ -4,6 +4,9 @@ import re
 
 
 async def get_size(input):
+    input = input.replace("W", "")
+    input = input.replace("Y", "")
+    input = input.strip()
     if input:
         try:
             a = float(input)
