@@ -10,7 +10,7 @@ async def scrape(keywords) -> json:
     algolia = {
         "x-algolia-agent": "Algolia for vanilla JavaScript 3.32.0",
         "x-algolia-application-id": "XW7SBCT9V6",
-        "x-algolia-api-key": "ZGRhZGYwNzIxMjJkNTgzMTc4OTNkYTRlZTkzNTlmMTRhNTViZDVmNTgzZWQyMDhkNWE1ZDA2YWE2OWZkOTM3NXZhbGlkVW50aWw9MTYyNTEwOTI4OQ==",
+        "x-algolia-api-key": "Mzg2ZmNiOGM0NDljNTE3NmY3YjQ4NmZjNDEwNDU3MDI2MWVjMjA1MjcyZTc1MjU5YWQ0MzA2NmMyMTVkYWVmY3ZhbGlkVW50aWw9MTYyNTMyMzk5MA==",
     }
     with requests.Session() as session:
         r = session.post(
