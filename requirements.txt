@@ -3,3 +3,4 @@ discord-py-slash-command
 requests
 python-dotenv
 bs4
+numpy

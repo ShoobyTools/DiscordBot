@@ -1,8 +1,6 @@
 import requests
 import json
 
-import embed
-
 # scrape stockx and return a json
 async def scrape(keywords) -> json:
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
@@ -51,6 +49,8 @@ async def get_prices(name, ctx):
     prices = {}
     for child in general["children"]:
         current_size = general["children"][child]
+        if current_size["shoeSize"] == "15":
+            break
         ask = current_size["market"]["lowestAsk"]
         bid = current_size["market"]["highestBid"]
         if ask == 0:
@@ -62,8 +62,8 @@ async def get_prices(name, ctx):
         else:
             bid = "$" + str(bid)
         prices[current_size["shoeSize"]] = {
-            "ask": f"```bash\nAsk: {ask}",
-            "bid": f"Bid: {bid}```"
+            "ask": ask,
+            "bid": bid
         }
     info = {
         "title": general["title"],
@@ -77,7 +77,7 @@ async def get_prices(name, ctx):
             "prices": prices
         },
         "color": 0x099F5F,
-        "footer text": "Goat",
+        "footer text": "StockX",
         "footer image": "https://cdn.discordapp.com/attachments/734938642790744097/771078700178866226/stockx.png"
     }
 
@@ -99,6 +99,7 @@ async def get_prices(name, ctx):
         )
         if retail_price:
             info["retail price"] = f"${retail_price['value']}"
-        info["one size"] = True
-    await embed.send(info, ctx)
+        info["sizes"]["one size"] = True
+    
+    return info
 
