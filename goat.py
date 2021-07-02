@@ -1,7 +1,6 @@
 import requests
 import json
 
-import embed
 
 # scrape goat and return a json
 async def scrape(keywords) -> json:
@@ -71,8 +70,10 @@ async def get_prices(name, ctx):
             size["boxCondition"] == "good_condition"
             and size["shoeCondition"] == "new_no_defects"
         ):
+            if size["size"] == 15:
+                break
             lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
-            info["sizes"]["prices"][str(size["size"])] = f"```bash\n${lowestPrice}```"
+            info["sizes"]["prices"][str(size["size"])] = "$" + str(lowestPrice)
 
     if "sku" in general:
         info["sku"]=general["sku"].replace(" ", "-")
@@ -87,5 +88,4 @@ async def get_prices(name, ctx):
             price = "$" + str(price)
         info["retail price"] = price
 
-
-    await embed.send(info, ctx)
+    return info

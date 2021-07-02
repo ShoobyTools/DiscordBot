@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 
-import embed
 
 def int_or_float(num):
     try:
@@ -55,7 +54,7 @@ async def get_prices(name, ctx):
         "title": f"{data['name']} {data['nickname']}",
         "url": data["pdpUrl"],
         "thumbnail": data["smallImage"]["url"],
-        "sku": data["manufacturerSku"],
+        "sku": data["manufacturerSku"].replace(" ", "-"),
         "retail price": "N/A",
         "sizes": {
             "asks and bids": False,
@@ -76,7 +75,9 @@ async def get_prices(name, ctx):
     all_sizes = soup.find("div", {"class": "product-sizes__options"}).find_all("span", {"class" : "product-sizes__detail"})
     prices = []
     for option in all_sizes:
-        size = int_or_float(option.find("span", {"class" :"product-sizes__size"}).text.strip("\n").replace("Y", ""))
+        size = int_or_float(option.find("span", {"class" :"product-sizes__size"}).text.replace("Y", "").replace("W", "").strip("\n"))
+        if size == 15:
+            break
         price = option.find("span", {"class" :"product-sizes__price"}).text.strip("\n")
         if "Notify me" in price:
             price = "N/A"
@@ -88,9 +89,9 @@ async def get_prices(name, ctx):
 
     for price in prices:
         current_size = str(price[0])
-        current_price = f"```bash\n{price[1]}```"
+        current_price = price[1]
 
         info["sizes"]["prices"][current_size] = current_price
 
-    await embed.send(info, ctx)
+    return info
 

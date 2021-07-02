@@ -18,25 +18,25 @@ async def send(info: dict, ctx):
                 bid = prices[size]["bid"]
                 embed.add_field(
                     name=size,
-                    value=f"{ask}\n{bid}",
+                    value=f"```bash\nAsk: {ask}\nBid: {bid}```",
                     inline=True,
                 )
         else:
             embed.add_field(
                 name="Ask",
-                value=prices["one size"]["ask"],
+                value=f"```bash\n{prices['']['ask']}```",
                 inline=True,
             )
             embed.add_field(
                 name="Bid",
-                value=prices["one size"]["bid"],
+                value=f"```bash\n{prices['']['bid']}```",
                 inline=True,
             )
     else:
         for size in prices:
             embed.add_field(
                 name=size,
-                value=prices[size],
+                value=f"```bash\n{prices[size]}```",
                 inline=True,
             )
     embed.set_footer(
