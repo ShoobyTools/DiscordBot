@@ -1,9 +1,10 @@
 import requests
 import json
 
+import errors
 
 # scrape goat and return a json
-async def scrape(keywords) -> json:
+def scrape(keywords) -> json:
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
@@ -22,13 +23,12 @@ async def scrape(keywords) -> json:
     return r.json()
 
 
-async def get_prices(name, ctx):
+def get_prices(name):
     keywords = name.replace(" ", "%20")
-    results = await scrape(keywords)
+    results = scrape(keywords)
 
     if len(results["hits"]) == 0:
-        await ctx.send("No products found. Please try again.")
-        return
+        raise errors.NoProductsFound
 
     header = {
         "accept-encoding": "gzip, deflate, br",

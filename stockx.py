@@ -1,14 +1,17 @@
 import requests
 import json
+import re
+
+import errors
 
 # scrape stockx and return a json
-async def scrape(keywords) -> json:
+def scrape(keywords) -> json:
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
     byte_payload = bytes(json_string, "utf-8")
     algolia = {
         "x-algolia-agent": "Algolia for vanilla JavaScript 3.32.0",
         "x-algolia-application-id": "XW7SBCT9V6",
-        "x-algolia-api-key": "Mzg2ZmNiOGM0NDljNTE3NmY3YjQ4NmZjNDEwNDU3MDI2MWVjMjA1MjcyZTc1MjU5YWQ0MzA2NmMyMTVkYWVmY3ZhbGlkVW50aWw9MTYyNTMyMzk5MA==",
+        "x-algolia-api-key": get_api_key(),
     }
     with requests.Session() as session:
         r = session.post(
@@ -20,14 +23,27 @@ async def scrape(keywords) -> json:
         )
         return r.json()
 
+def get_api_key() -> str:
+    header = {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-encoding": "gzip, deflate",
+        "accept-language": "en-US,en;q=0.9,lt;q=0.8",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+    }
+    stock_page = requests.get("https://stockx.com/", verify=True, headers=header).text
+    script = re.findall(r"window.globalConstants = .*", stock_page)
+    if len(script) != 0:
+        script = script[0].replace("window.globalConstants = ", "")
+        script = script.rstrip(script[-1])
+        script = json.loads(script)
+        return script["search"]["SEARCH_ONLY_API_KEY"]
 
-async def get_prices(name, ctx):
+def get_prices(name):
     keywords = name.replace(" ", "%20")
-    result = await scrape(keywords)
+    result = scrape(keywords)
 
     if len(result["hits"]) == 0:
-        await ctx.send("No products found. Please try again.")
-        return
+        raise errors.NoProductsFound
 
     product_url = result["hits"][0]["url"]
 
@@ -41,8 +57,8 @@ async def get_prices(name, ctx):
 
     response = requests.get(apiurl, verify=True, headers=header)
     if response.status_code == 403:
-        await ctx.send("Error accessing StockX site (ERROR 403)")
-        return
+        raise errors.SiteUnreachable
+
     response = response.json()
     general = response["Product"]
 

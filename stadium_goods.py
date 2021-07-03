@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-
+import json
+import errors
 
 def int_or_float(num):
     try:
@@ -8,7 +9,7 @@ def int_or_float(num):
     except ValueError:
         return float(num)
 
-async def get_prices(name, ctx):
+def get_prices(name):
     header = {
         "accept": "application/json",
         "content-type": "application/json",
@@ -45,8 +46,8 @@ async def get_prices(name, ctx):
 
     data = r.json()
     if len(data["data"]["configurableProducts"]["edges"]) == 0:
-        await ctx.send("No products found. Please try again.")
-        return
+        raise errors.NoProductsFound
+    
     data = data["data"]["configurableProducts"]["edges"][0]["node"]
 
     prices = {}
@@ -93,5 +94,7 @@ async def get_prices(name, ctx):
 
         info["sizes"]["prices"][current_size] = current_price
 
+    with open('data.json', 'w', encoding='utf-8') as f:
+        json.dump(info, f, ensure_ascii=False, indent=4)
     return info
 

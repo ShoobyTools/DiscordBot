@@ -1,3 +1,4 @@
+from discord import errors
 import stockx
 import goat
 import stadium_goods
@@ -11,9 +12,9 @@ def int_or_float(num):
         return float(num)
 
 async def get_prices(name, ctx):
-    stockx_info = await stockx.get_prices(name, ctx)
-    goat_info = await goat.get_prices(stockx_info["sku"], ctx)
-    stadium_goods_info = await stadium_goods.get_prices(stockx_info["sku"], ctx)
+    stockx_info = stockx.get_prices(name)
+    goat_info = goat.get_prices(stockx_info["sku"])
+    stadium_goods_info = stadium_goods.get_prices(stockx_info["sku"])
 
     stockx_prices = stockx_info["sizes"]["prices"]
     goat_prices = goat_info["sizes"]["prices"]

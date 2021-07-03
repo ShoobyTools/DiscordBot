@@ -1,5 +1,6 @@
 import discord
 from discord_slash import SlashCommand
+from discord.ext import commands
 import os
 from dotenv import load_dotenv
 
@@ -10,12 +11,13 @@ import compare
 import variants
 
 import embed
+import errors
 
 load_dotenv()
 
 TOKEN = os.environ["TOKEN"]
 GUILD_ID = [int(os.environ["GUILD_ID"])]
-client = discord.Client(intents=discord.Intents.default())
+client = commands.Bot(command_prefix=".")
 slash = SlashCommand(client, sync_commands=True)
 
 
@@ -50,25 +52,72 @@ async def _help(ctx):
         value="Get Shopify variants and stock if a site has it loaded (i.e. ShoePalace)",
         inline=False,
     )
+    embed.add_field(name="⠀", value="⠀", inline=False)
+    embed.add_field(
+        name="Alternate Price Checker instructions",
+        value="Type `.` before any command to use it.",
+        inline=False,
+    )
+    embed.add_field(
+        name="s",
+        value="List StockX prices for a shoe or collectible.",
+        inline=False,
+    )
+    embed.add_field(name="g", value="List Goat prices for a shoe.", inline=False)
     await ctx.send(embed=embed)
 
 
 @slash.slash(name="StockX", description="Check StockX prices", guild_ids=GUILD_ID)
 async def _stockx(ctx, name: str):
-    info = await stockx.get_prices(name, ctx)
-    await embed.send(info, ctx)
+    try:
+        info = stockx.get_prices(name)
+        await embed.send(info, ctx)
+    except errors.NoProductsFound:
+        await ctx.send("No products found. Try again.")
+    except errors.SiteUnreachable:
+        await ctx.send("Error accessing StockX site (ERROR 403)")
 
+@client.command(pass_context=True)
+async def s(ctx, *args):
+    name = ""
+    for word in args:
+        name += word + " "
+    name.strip()
+    try:
+        info = stockx.get_prices(name)
+        await embed.send(info, ctx)
+    except errors.NoProductsFound:
+        await ctx.send("No products found. Try again.")
+    except errors.SiteUnreachable:
+        await ctx.send("Error accessing StockX site (ERROR 403)")
 
 @slash.slash(name="Goat", description="Check Goat prices", guild_ids=GUILD_ID)
 async def _goat(ctx, name: str):
-    info = await goat.get_prices(name, ctx)
-    await embed.send(info, ctx)
+    try:
+        info = goat.get_prices(name)
+        await embed.send(info, ctx)
+    except errors.NoProductsFound:
+        await ctx.send("No products found. Try again.")
 
+@client.command(pass_context=True)
+async def g(ctx, *args):
+    name = ""
+    for word in args:
+        name += word + " "
+    name.strip()
+    try:
+        info = goat.get_prices(name)
+        await embed.send(info, ctx)
+    except errors.NoProductsFound:
+        await ctx.send("No products found. Try again.")
 
 @slash.slash(name="SG", description="Check Stadium Goods prices", guild_ids=GUILD_ID)
-async def sg(ctx, name: str):
-    info = await stadium_goods.get_prices(name, ctx)
-    await embed.send(info, ctx)
+async def _sg(ctx, name: str):
+    try:
+        info = stadium_goods.get_prices(name)
+        await embed.send(info, ctx)
+    except errors.NoProductsFound:
+        await ctx.send("No products found. Try again.")
 
 
 @slash.slash(
@@ -77,7 +126,10 @@ async def sg(ctx, name: str):
     guild_ids=GUILD_ID,
 )
 async def _compare(ctx, name):
-    await compare.get_prices(name, ctx)
+    try:
+        await compare.get_prices(name, ctx)
+    except errors.NoProductsFound:
+        await ctx.send("No products found. Try again.")
 
 
 @slash.slash(name="Vars", description="Get Shopify variants", guild_ids=GUILD_ID)
