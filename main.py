@@ -78,16 +78,15 @@ async def _stockx(ctx, name: str):
     try:
         info = stockx.get_prices(name)
         await embed.send_listing(info, ctx)
-        while True:
-            button_ctx: ComponentContext = await wait_for_component(client, components=embed.stockx_button_row)
-            if button_ctx.component["custom_id"] == "stockx_profit_button1":
-                await embed.send_profit(info, button_ctx, 1)
-            elif button_ctx.component["custom_id"] == "stockx_profit_button2":
-                await embed.send_profit(info, button_ctx, 2)
-            elif button_ctx.component["custom_id"] == "stockx_profit_button3":
-                await embed.send_profit(info, button_ctx, 3)
-            elif button_ctx.component["custom_id"] == "stockx_profit_button4":
-                await embed.send_profit(info, button_ctx, 4)
+        button_ctx: ComponentContext = await wait_for_component(client, components=embed.stockx_button_row)
+        if button_ctx.component["custom_id"] == "stockx_profit_button1":
+            await embed.send_profit(info, button_ctx, 1)
+        elif button_ctx.component["custom_id"] == "stockx_profit_button2":
+            await embed.send_profit(info, button_ctx, 2)
+        elif button_ctx.component["custom_id"] == "stockx_profit_button3":
+            await embed.send_profit(info, button_ctx, 3)
+        elif button_ctx.component["custom_id"] == "stockx_profit_button4":
+            await embed.send_profit(info, button_ctx, 4)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
     except errors.SiteUnreachable:
@@ -102,6 +101,15 @@ async def s(ctx, *args):
     try:
         info = stockx.get_prices(name)
         await embed.send_listing(info, ctx)
+        button_ctx: ComponentContext = await wait_for_component(client, components=embed.stockx_button_row)
+        if button_ctx.component["custom_id"] == "stockx_profit_button1":
+            await embed.send_profit(info, button_ctx, 1)
+        elif button_ctx.component["custom_id"] == "stockx_profit_button2":
+            await embed.send_profit(info, button_ctx, 2)
+        elif button_ctx.component["custom_id"] == "stockx_profit_button3":
+            await embed.send_profit(info, button_ctx, 3)
+        elif button_ctx.component["custom_id"] == "stockx_profit_button4":
+            await embed.send_profit(info, button_ctx, 4)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
     except errors.SiteUnreachable:
@@ -116,10 +124,9 @@ async def _goat(ctx, name: str):
     try:
         info = goat.get_prices(name)
         await embed.send_listing(info, ctx)
-        while True:
-            button_ctx: ComponentContext = await wait_for_component(client, components=embed.goat_button_row)
-            if button_ctx.component["custom_id"] == "goat_profit_button":
-                await embed.send_profit(info, button_ctx, 0)
+        button_ctx: ComponentContext = await wait_for_component(client, components=embed.goat_button_row)
+        if button_ctx.component["custom_id"] == "goat_profit_button":
+            await embed.send_profit(info, button_ctx, 0)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
 
@@ -132,6 +139,9 @@ async def g(ctx, *args):
     try:
         info = goat.get_prices(name)
         await embed.send_listing(info, ctx)
+        button_ctx: ComponentContext = await wait_for_component(client, components=embed.goat_button_row)
+        if button_ctx.component["custom_id"] == "goat_profit_button":
+            await embed.send_profit(info, button_ctx, 0)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
 
@@ -139,16 +149,14 @@ async def g(ctx, *args):
 # Stadium Goods
 # ==============================================================================
 
-
 @slash.slash(name="SG", description="Check Stadium Goods prices", guild_ids=GUILD_ID)
 async def _sg(ctx, name: str):
     try:
         info = stadium_goods.get_prices(name)
         await embed.send_listing(info, ctx)
-        while True:
-            button_ctx: ComponentContext = await wait_for_component(client, components=embed.sg_button_row)
-            if button_ctx.component["custom_id"] == "sg_profit_button":
-                await embed.send_profit(info, button_ctx, 0)
+        button_ctx: ComponentContext = await wait_for_component(client, components=embed.sg_button_row)
+        if button_ctx.component["custom_id"] == "sg_profit_button":
+            await embed.send_profit(info, button_ctx, 0)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
 
