@@ -22,6 +22,8 @@ def scrape(keywords) -> json:
         )
     return r.json()
 
+def calculate_price(price, processing_fee, selling_fee) -> float:
+    return round(price * ((100.00 - (processing_fee + selling_fee))/100), 2)
 
 def get_prices(name):
     keywords = name.replace(" ", "%20")
@@ -49,6 +51,10 @@ def get_prices(name):
     general = general.json()
 
 
+    seller_fees = {
+            "processing fee": 2.9,
+            0: 9.5
+        }
     prices = {}
     info = {
         "title": general['name'],
@@ -57,6 +63,7 @@ def get_prices(name):
         "sku": "N/A",
         "retail price": "N/A",
         "sizes": {
+            "seller fees": seller_fees,
             "asks and bids": False,
             "one size": False,
             "prices": prices
@@ -72,8 +79,14 @@ def get_prices(name):
         ):
             if size["size"] == 15:
                 break
-            lowestPrice = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
-            info["sizes"]["prices"][str(size["size"])] = "$" + str(lowestPrice)
+            lowest_price = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
+
+            size_info = {
+                "listing": lowest_price,
+                0: calculate_price(lowest_price, info["sizes"]["seller fees"]["processing fee"], info["sizes"]["seller fees"][0])
+            }
+
+            info["sizes"]["prices"][str(size["size"])] = size_info
 
     if "sku" in general:
         info["sku"]=general["sku"].replace(" ", "-")

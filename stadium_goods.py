@@ -9,6 +9,9 @@ def int_or_float(num):
     except ValueError:
         return float(num)
 
+def calculate_price(price, processing_fee, selling_fee) -> float:
+    return round(price * ((100.00 - (processing_fee + selling_fee))/100), 2)
+
 def get_prices(name):
     header = {
         "accept": "application/json",
@@ -50,6 +53,10 @@ def get_prices(name):
     
     data = data["data"]["configurableProducts"]["edges"][0]["node"]
 
+    seller_fees = {
+        "processing fee": 0.0,
+        0: 20.0
+    }
     prices = {}
     info = {
         "title": f"{data['name']} {data['nickname']}",
@@ -58,6 +65,7 @@ def get_prices(name):
         "sku": data["manufacturerSku"].replace(" ", "-"),
         "retail price": "N/A",
         "sizes": {
+            "seller fees": seller_fees,
             "asks and bids": False,
             "one size": False,
             "prices": prices
@@ -84,17 +92,19 @@ def get_prices(name):
             price = "N/A"
         else:
             price = price.replace(".00", "")
+            price = int(price.strip("$"))
         prices.append((size, price))
     
     prices.sort()
 
     for price in prices:
-        current_size = str(price[0])
+        current_size = price[0]
         current_price = price[1]
 
-        info["sizes"]["prices"][current_size] = current_price
+        info["sizes"]["prices"][current_size] = {
+            "listing": str(current_price),
+            0: calculate_price(current_price, seller_fees["processing fee"], seller_fees[0])
+        }
 
-    with open('data.json', 'w', encoding='utf-8') as f:
-        json.dump(info, f, ensure_ascii=False, indent=4)
     return info
 

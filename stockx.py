@@ -38,6 +38,9 @@ def get_api_key() -> str:
         script = json.loads(script)
         return script["search"]["SEARCH_ONLY_API_KEY"]
 
+def calculate_price(price, processing_fee, selling_fee) -> float:
+    return round(price * ((100.00 - (processing_fee + selling_fee))/100), 2)
+
 def get_prices(name):
     keywords = name.replace(" ", "%20")
     result = scrape(keywords)
@@ -62,6 +65,13 @@ def get_prices(name):
     response = response.json()
     general = response["Product"]
 
+    seller_fees = {
+                "processing fee": 3.0,
+                1: 9.5,
+                2: 9.0,
+                3: 8.5,
+                4: 8.0
+            }
     prices = {}
     for child in general["children"]:
         current_size = general["children"][child]
@@ -72,14 +82,42 @@ def get_prices(name):
         if ask == 0:
             ask = "N/A"
         else:
+            ask_profit_level1 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[1])}"
+            ask_profit_level2 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[2])}"
+            ask_profit_level3 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[3])}"
+            ask_profit_level4 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[4])}"
             ask = "$" + str(ask)
         if bid == 0:
             bid = "N/A"
+            ask_profit_level1 = "N/A"
+            ask_profit_level2 = "N/A"
+            ask_profit_level3 = "N/A"
+            ask_profit_level4 = "N/A"
         else:
+            bid_profit_level1 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[1])}"
+            bid_profit_level2 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[2])}"
+            bid_profit_level3 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[3])}"
+            bid_profit_level4 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[4])}"
             bid = "$" + str(bid)
+        
+        ask_info = {
+            "listing": ask,
+            1: ask_profit_level1,
+            2: ask_profit_level2,
+            3: ask_profit_level3,
+            4: ask_profit_level4
+        }
+
+        bid_info = {
+            "listing": bid,
+            1: bid_profit_level1,
+            2: bid_profit_level2,
+            3: bid_profit_level3,
+            4: bid_profit_level4
+        }
         prices[current_size["shoeSize"]] = {
-            "ask": ask,
-            "bid": bid
+            "ask": ask_info,
+            "bid": bid_info
         }
     info = {
         "title": general["title"],
@@ -88,6 +126,7 @@ def get_prices(name):
         "sku": "N/A",
         "retail price": "N/A",
         "sizes": {
+            "seller fees": seller_fees,
             "asks and bids": True,
             "one size": False,
             "prices": prices
@@ -118,4 +157,3 @@ def get_prices(name):
         info["sizes"]["one size"] = True
     
     return info
-
