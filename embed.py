@@ -89,8 +89,8 @@ async def send_listing(info: dict, ctx):
         await ctx.send(embed=embed, components=[stockx_button_row])
     elif info["footer text"] == "Goat":
         await ctx.send(embed=embed, components=[goat_button_row])
-    elif info["footer text"] == "Stadium Goods":
-        await ctx.send(embed=embed, components=[sg_button_row])
+    # elif info["footer text"] == "Stadium Goods":
+    #     await ctx.send(embed=embed, components=[sg_button_row])
 
 
 async def send_profit(info: dict, ctx, seller_level=0):
