@@ -6,3 +6,6 @@ class NoProductsFound(Error):
 
 class SiteUnreachable(Error):
     pass
+
+class NoRetailPrice(Error):
+    pass

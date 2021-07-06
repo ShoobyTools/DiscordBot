@@ -73,25 +73,65 @@ async def _help(ctx):
 # StockX
 # ==============================================================================
 
+# on button press
+# level 1
+@slash.component_callback()
+async def stockx_profit_button1(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = stockx.get_prices(title)
+    try:
+        await embed.send_profit(info, ctx, 1)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
+
+# level 2
+@slash.component_callback()
+async def stockx_profit_button2(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = stockx.get_prices(title)
+    try:
+        await embed.send_profit(info, ctx, 2)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
+
+# level 3
+@slash.component_callback()
+async def stockx_profit_button3(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = stockx.get_prices(title)
+    try:
+        await embed.send_profit(info, ctx, 3)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
+
+# level 4
+@slash.component_callback()
+async def stockx_profit_button4(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = stockx.get_prices(title)
+    try:
+        await embed.send_profit(info, ctx, 4)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
+
+@slash.component_callback()
+async def stockx_listing_button(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = stockx.get_prices(title)
+    await embed.send_listing(info, ctx, True)
+
+# slash command call
 @slash.slash(name="StockX", description="Check StockX prices", guild_ids=GUILD_ID)
 async def _stockx(ctx, name: str):
     try:
         info = stockx.get_prices(name)
-        await embed.send_listing(info, ctx)
-        button_ctx: ComponentContext = await wait_for_component(client, components=embed.stockx_button_row)
-        if button_ctx.component["custom_id"] == "stockx_profit_button1":
-            await embed.send_profit(info, button_ctx, 1)
-        elif button_ctx.component["custom_id"] == "stockx_profit_button2":
-            await embed.send_profit(info, button_ctx, 2)
-        elif button_ctx.component["custom_id"] == "stockx_profit_button3":
-            await embed.send_profit(info, button_ctx, 3)
-        elif button_ctx.component["custom_id"] == "stockx_profit_button4":
-            await embed.send_profit(info, button_ctx, 4)
+        await embed.send_listing(info, ctx, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
     except errors.SiteUnreachable:
         await ctx.send("Error accessing StockX site (ERROR 403)")
 
+# .s command call
 @client.command(pass_context=True)
 async def s(ctx, *args):
     name = ""
@@ -100,16 +140,7 @@ async def s(ctx, *args):
     name.strip()
     try:
         info = stockx.get_prices(name)
-        await embed.send_listing(info, ctx)
-        button_ctx: ComponentContext = await wait_for_component(client, components=embed.stockx_button_row)
-        if button_ctx.component["custom_id"] == "stockx_profit_button1":
-            await embed.send_profit(info, button_ctx, 1)
-        elif button_ctx.component["custom_id"] == "stockx_profit_button2":
-            await embed.send_profit(info, button_ctx, 2)
-        elif button_ctx.component["custom_id"] == "stockx_profit_button3":
-            await embed.send_profit(info, button_ctx, 3)
-        elif button_ctx.component["custom_id"] == "stockx_profit_button4":
-            await embed.send_profit(info, button_ctx, 4)
+        await embed.send_listing(info, ctx, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
     except errors.SiteUnreachable:
@@ -119,17 +150,32 @@ async def s(ctx, *args):
 # Goat
 # ==============================================================================
 
+# on button press
+@slash.component_callback()
+async def goat_profit_button(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = goat.get_prices(title)
+    try:
+        await embed.send_profit(info, ctx, 0)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
+
+@slash.component_callback()
+async def goat_listing_button(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = goat.get_prices(title)
+    await embed.send_listing(info, ctx, True)
+
+# slash command call
 @slash.slash(name="Goat", description="Check Goat prices", guild_ids=GUILD_ID)
 async def _goat(ctx, name: str):
     try:
         info = goat.get_prices(name)
-        await embed.send_listing(info, ctx)
-        button_ctx: ComponentContext = await wait_for_component(client, components=embed.goat_button_row)
-        if button_ctx.component["custom_id"] == "goat_profit_button":
-            await embed.send_profit(info, button_ctx, 0)
+        await embed.send_listing(info, ctx, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
 
+# .g command call
 @client.command(pass_context=True)
 async def g(ctx, *args):
     name = ""
@@ -138,10 +184,7 @@ async def g(ctx, *args):
     name.strip()
     try:
         info = goat.get_prices(name)
-        await embed.send_listing(info, ctx)
-        button_ctx: ComponentContext = await wait_for_component(client, components=embed.goat_button_row)
-        if button_ctx.component["custom_id"] == "goat_profit_button":
-            await embed.send_profit(info, button_ctx, 0)
+        await embed.send_listing(info, ctx, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
 
@@ -149,14 +192,27 @@ async def g(ctx, *args):
 # Stadium Goods
 # ==============================================================================
 
+# on button press
+@slash.component_callback()
+async def sg_profit_button(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = stadium_goods.get_prices(title)
+    try:
+        await embed.send_profit(info, ctx, 0)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content=":red_square: Retail price not available. :red_square:")
+
+@slash.component_callback()
+async def sg_listing_button(ctx: ComponentContext):
+    title = ctx.origin_message.embeds[0].title
+    info = stadium_goods.get_prices(title)
+    await embed.send_listing(info, ctx, True)
+
 @slash.slash(name="SG", description="Check Stadium Goods prices", guild_ids=GUILD_ID)
 async def _sg(ctx, name: str):
     try:
         info = stadium_goods.get_prices(name)
-        await embed.send_listing(info, ctx)
-        button_ctx: ComponentContext = await wait_for_component(client, components=embed.sg_button_row)
-        if button_ctx.component["custom_id"] == "sg_profit_button":
-            await embed.send_profit(info, button_ctx, 0)
+        await embed.send_listing(info, ctx, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
 

@@ -101,9 +101,12 @@ def get_prices(name):
         current_size = price[0]
         current_price = price[1]
 
+        profit = "N/A"
+        if current_price != "N/A":
+            profit = calculate_price(current_price, seller_fees["processing fee"], seller_fees[0])
         info["sizes"]["prices"][current_size] = {
             "listing": str(current_price),
-            0: calculate_price(current_price, seller_fees["processing fee"], seller_fees[0])
+            0: profit
         }
 
     return info
