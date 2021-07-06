@@ -103,6 +103,7 @@ async def send_listing(info: dict, ctx, editing: bool):
         text=info["footer text"],
         icon_url=info["footer image"],
     )
+
     if not editing:
         if info["footer text"] == "StockX":
             await ctx.send(embed=embed, components=[stockx_button_row])
