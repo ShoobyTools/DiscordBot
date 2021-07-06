@@ -24,12 +24,20 @@ stockx_price_buttons = [
         label="Level 4",
         custom_id="stockx_profit_button4",
     ),
+    manage_components.create_button(
+        style=ButtonStyle.grey,
+        label="Listing",
+        custom_id="stockx_listing_button",
+    ),
 ]
 stockx_button_row = manage_components.create_actionrow(*stockx_price_buttons)
 
 goat_price_buttons = [
     manage_components.create_button(
         style=ButtonStyle.green, label="Profit", custom_id="goat_profit_button"
+    ),
+    manage_components.create_button(
+        style=ButtonStyle.grey, label="Listing", custom_id="goat_listing_button"
     )
 ]
 goat_button_row = manage_components.create_actionrow(*goat_price_buttons)
@@ -37,12 +45,15 @@ goat_button_row = manage_components.create_actionrow(*goat_price_buttons)
 sg_price_buttons = [
     manage_components.create_button(
         style=ButtonStyle.green, label="Profit", custom_id="sg_profit_button"
+    ),
+    manage_components.create_button(
+        style=ButtonStyle.grey, label="Listing", custom_id="sg_listing_button"
     )
 ]
 sg_button_row = manage_components.create_actionrow(*sg_price_buttons)
 
 
-async def send_listing(info: dict, ctx):
+async def send_listing(info: dict, ctx, editing: bool):
     embed = discord.Embed(
         title=info["title"],
         url=info["url"],
@@ -85,12 +96,15 @@ async def send_listing(info: dict, ctx):
         text=info["footer text"],
         icon_url=info["footer image"],
     )
-    if info["footer text"] == "StockX":
-        await ctx.send(embed=embed, components=[stockx_button_row])
-    elif info["footer text"] == "Goat":
-        await ctx.send(embed=embed, components=[goat_button_row])
-    # elif info["footer text"] == "Stadium Goods":
-    #     await ctx.send(embed=embed, components=[sg_button_row])
+    if not editing:
+        if info["footer text"] == "StockX":
+            await ctx.send(embed=embed, components=[stockx_button_row])
+        elif info["footer text"] == "Goat":
+            await ctx.send(embed=embed, components=[goat_button_row])
+        elif info["footer text"] == "Stadium Goods":
+            await ctx.send(embed=embed, components=[sg_button_row])
+    else:
+        await ctx.edit_origin(embed=embed)
 
 
 async def send_profit(info: dict, ctx, seller_level=0):
@@ -169,14 +183,13 @@ async def send_profit(info: dict, ctx, seller_level=0):
     else:
         for size in prices:
             price = prices[size]
-            if info["retail price"] != "N/A":
-                retail = float(info["retail price"].strip("$"))
-                price = float(price[seller_level])
-                price = round(price - retail, 2)
-                if price < 0:
-                    price = f"-${price * -1}"
-                else:
-                    price = "$" + str(price)
+            retail = float(info["retail price"].strip("$"))
+            price = float(price[seller_level])
+            price = round(price - retail, 2)
+            if price < 0:
+                price = f"-${price * -1}"
+            else:
+                price = "$" + str(price)
             embed.add_field(
                 name=size,
                 value=f"```cpp\n{price}```",
