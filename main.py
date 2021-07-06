@@ -79,28 +79,40 @@ async def _help(ctx):
 async def stockx_profit_button1(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
-    await embed.send_profit(info, ctx, 1)
+    try:
+        await embed.send_profit(info, ctx, 1)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
 
 # level 2
 @slash.component_callback()
 async def stockx_profit_button2(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
-    await embed.send_profit(info, ctx, 2)
+    try:
+        await embed.send_profit(info, ctx, 2)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
 
 # level 3
 @slash.component_callback()
 async def stockx_profit_button3(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
-    await embed.send_profit(info, ctx, 3)
+    try:
+        await embed.send_profit(info, ctx, 3)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
 
 # level 4
 @slash.component_callback()
 async def stockx_profit_button4(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
-    await embed.send_profit(info, ctx, 4)
+    try:
+        await embed.send_profit(info, ctx, 4)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
 
 @slash.component_callback()
 async def stockx_listing_button(ctx: ComponentContext):
@@ -143,7 +155,10 @@ async def s(ctx, *args):
 async def goat_profit_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = goat.get_prices(title)
-    await embed.send_profit(info, ctx, 0)
+    try:
+        await embed.send_profit(info, ctx, 0)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content="Retail price not available.")
 
 @slash.component_callback()
 async def goat_listing_button(ctx: ComponentContext):
@@ -182,7 +197,10 @@ async def g(ctx, *args):
 async def sg_profit_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stadium_goods.get_prices(title)
-    await embed.send_profit(info, ctx, 0)
+    try:
+        await embed.send_profit(info, ctx, 0)
+    except errors.NoRetailPrice:
+        await ctx.edit_origin(content=":red_square: Retail price not available. :red_square:")
 
 @slash.component_callback()
 async def sg_listing_button(ctx: ComponentContext):
