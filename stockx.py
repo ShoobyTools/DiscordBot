@@ -79,6 +79,14 @@ def get_prices(name):
             break
         ask = current_size["market"]["lowestAsk"]
         bid = current_size["market"]["highestBid"]
+        ask_profit_level1 = 0
+        ask_profit_level2 = 0
+        ask_profit_level3 = 0
+        ask_profit_level4 = 0
+        bid_profit_level1 = 0
+        bid_profit_level2 = 0
+        bid_profit_level3 = 0
+        bid_profit_level4 = 0
         if ask == 0:
             ask = "N/A"
         else:

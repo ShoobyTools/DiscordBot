@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord_slash.context import ComponentContext
 from discord_slash.utils.manage_components import wait_for_component
 
+import time
 import os
 from dotenv import load_dotenv
 
@@ -83,6 +84,8 @@ async def stockx_profit_button1(ctx: ComponentContext):
         await embed.send_profit(info, ctx, 1)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
+    except discord.errors.NotFound:
+        await embed.send_profit(info, ctx, 1)
 
 # level 2
 @slash.component_callback()
@@ -93,6 +96,8 @@ async def stockx_profit_button2(ctx: ComponentContext):
         await embed.send_profit(info, ctx, 2)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
+    except discord.errors.NotFound:
+        await embed.send_profit(info, ctx, 2)
 
 # level 3
 @slash.component_callback()
@@ -103,6 +108,8 @@ async def stockx_profit_button3(ctx: ComponentContext):
         await embed.send_profit(info, ctx, 3)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
+    except discord.errors.NotFound:
+        await embed.send_profit(info, ctx, 3)
 
 # level 4
 @slash.component_callback()
@@ -113,23 +120,31 @@ async def stockx_profit_button4(ctx: ComponentContext):
         await embed.send_profit(info, ctx, 4)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
+    except discord.errors.NotFound:
+        await embed.send_profit(info, ctx, 4)
 
 @slash.component_callback()
 async def stockx_listing_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
-    await embed.send_listing(info, ctx, True)
+    try:
+        await embed.send_listing(info, ctx, True)
+    except discord.errors.NotFound:
+        await embed.send_listing(info, ctx, True)
 
 # slash command call
 @slash.slash(name="StockX", description="Check StockX prices", guild_ids=GUILD_ID)
 async def _stockx(ctx, name: str):
+    context = ctx
     try:
         info = stockx.get_prices(name)
-        await embed.send_listing(info, ctx, False)
+        await embed.send_listing(info, context, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
     except errors.SiteUnreachable:
         await ctx.send("Error accessing StockX site (ERROR 403)")
+    except discord.errors.NotFound:
+        await embed.send_listing(info, context, False)
 
 # .s command call
 @client.command(pass_context=True)
