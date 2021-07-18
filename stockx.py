@@ -109,13 +109,14 @@ def get_prices(name):
         )
         if retail_price:
             info["retail price"] = f"${retail_price['value']}"
-    elif product_type == "collectibles":
+    elif product_type == "collectibles" or product_type == "handbags":
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
         if retail_price:
             info["retail price"] = f"${retail_price['value']}"
         info["sizes"]["one size"] = True
+
     
     return info
 
