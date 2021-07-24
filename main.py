@@ -237,7 +237,7 @@ async def _sg(ctx, name: str):
 
 @slash.slash(
     name="Compare",
-    description="Compare prices between all 3 sites.",
+    description="Compare prices between StockX and Goat.",
     guild_ids=GUILD_ID,
 )
 async def _compare(ctx, name):
@@ -245,6 +245,15 @@ async def _compare(ctx, name):
         await compare.get_prices(name, ctx)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
+
+# .c command call
+@client.command(pass_context=True)
+async def c(ctx, *args):
+    name = ""
+    for word in args:
+        name += word + " "
+    name.strip()
+    await compare.get_prices(name, ctx)
 
 # ==============================================================================
 # Variants
