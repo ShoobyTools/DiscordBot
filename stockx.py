@@ -123,7 +123,7 @@ def get_prices(name):
             3: bid_profit_level3,
             4: bid_profit_level4
         }
-        prices[current_size["shoeSize"]] = {
+        prices[current_size["shoeSize"].strip("W").strip("Y")] = {
             "ask": ask_info,
             "bid": bid_info
         }

@@ -53,9 +53,9 @@ async def get_prices(name, ctx):
         else:
             goat_list += f"\nN/A"
         
-        # size_list += "-----"
-        # stockx_list += "-----"
-        # goat_list += "-----"
+        size_list += "\n----"
+        stockx_list += "\n----"
+        goat_list += "\n----"
 
     size_list += "```"
     stockx_list += "```"
@@ -74,7 +74,7 @@ async def get_prices(name, ctx):
     embed.add_field(name="StockX:", value=stockx_list, inline=True)
     embed.add_field(name="Goat:", value=goat_list, inline=True)
     embed.set_footer(
-        text="Footer",
+        text="StockX vs Goat",
     )
 
     await ctx.send(embed=embed)

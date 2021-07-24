@@ -51,6 +51,7 @@ async def _help(ctx):
         inline=False,
     )
     embed.add_field(name="Goat", value="List Goat prices for a shoe.", inline=False)
+    embed.add_field(name="Compare", value="Compare StockX and Goat prices.", inline=False)
     embed.add_field(
         name="Vars",
         value="Get Shopify variants and stock if a site has it loaded (i.e. ShoePalace)",
@@ -68,6 +69,7 @@ async def _help(ctx):
         inline=False,
     )
     embed.add_field(name="g", value="List Goat prices for a shoe.", inline=False)
+    embed.add_field(name="c", value="Compare StockX and Goat prices.", inline=False)
     await ctx.send(embed=embed)
 
 # ==============================================================================
