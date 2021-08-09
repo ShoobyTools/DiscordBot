@@ -69,6 +69,7 @@ class Product:
             level += 1
         
         self._sizes[_size]["ask"]["payouts"] = payouts
+        self._sizes[_size]["bid"] = None
 
 
     def set_bid(self, size: str, bid: int) -> None:
@@ -91,7 +92,7 @@ class Product:
 
 # ------------------------------------------------------------------------------
 #  GETTERS
-# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------    
     def get_title(self) -> str:
         return self._title
 
@@ -111,10 +112,16 @@ class Product:
         return self._footer_image
     
     def get_sku(self) -> str:
-        return self._sku
+        if self._sku:
+            return self._sku
+        else:
+            return "N/A"
     
     def get_retail_price(self) -> int:
-        return self._retail_price
+        if self._retail_price:
+            return self._retail_price
+        else:
+            return "N/A"
     
     def get_category(self) -> str:
         return self._category
