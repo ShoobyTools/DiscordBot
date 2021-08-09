@@ -2,6 +2,7 @@ import requests
 import json
 
 import errors
+import products
 
 # scrape goat and return a json
 def scrape(keywords) -> json:
@@ -21,9 +22,6 @@ def scrape(keywords) -> json:
             timeout=30,
         )
     return r.json()
-
-def calculate_price(price, processing_fee, selling_fee) -> float:
-    return round(price * ((100.00 - (processing_fee + selling_fee))/100), 2)
 
 def get_prices(name):
     keywords = name.replace(" ", "%20")
@@ -50,28 +48,17 @@ def get_prices(name):
     options = options.json()
     general = general.json()
 
+    product = products.Product(
+        title=general['name'],
+        url=f"https://www.goat.com/sneakers/{general['slug']}",
+        thumbnail=general["gridPictureUrl"],
+        color=0xFFFFFE,
+        footer_text="Goat",
+        footer_image="https://cdn.discordapp.com/attachments/734938642790744097/771077292881477632/goat.png",
+        processing_fee=2.9
+    )
+    product.add_seller_fee(9.5)
 
-    seller_fees = {
-            "processing fee": 2.9,
-            0: 9.5
-        }
-    prices = {}
-    info = {
-        "title": general['name'],
-        "url": f"https://www.goat.com/sneakers/{general['slug']}",
-        "thumbnail": general["gridPictureUrl"],
-        "sku": "N/A",
-        "retail price": "N/A",
-        "sizes": {
-            "seller fees": seller_fees,
-            "asks and bids": False,
-            "one size": False,
-            "prices": prices
-        },
-        "color": 0xFFFFFE,
-        "footer text": "Goat",
-        "footer image": "https://cdn.discordapp.com/attachments/734938642790744097/771077292881477632/goat.png"
-    }
     for size in options:
         if (
             size["boxCondition"] == "good_condition"
@@ -81,24 +68,16 @@ def get_prices(name):
                 break
             lowest_price = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
 
-            size_info = {
-                "listing": lowest_price,
-                0: calculate_price(lowest_price, info["sizes"]["seller fees"]["processing fee"], info["sizes"]["seller fees"][0])
-            }
-
-            info["sizes"]["prices"][str(size["size"])] = size_info
+            product.set_ask(size["size"], lowest_price)
 
     if "sku" in general:
-        info["sku"]=general["sku"].replace(" ", "-")
+        product.set_sku(general["sku"])
 
     if "localizedSpecialDisplayPriceCents" in general:
         price = int(
             general["localizedSpecialDisplayPriceCents"]["amountUsdCents"] / 100
         )
-        if price == 0:
-            price = "N/A"
-        else:
-            price = "$" + str(price)
-        info["retail price"] = price
+        if price != 0:
+            product.set_retail_price(price)
 
-    return info
+    return product

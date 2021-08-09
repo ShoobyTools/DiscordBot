@@ -1,31 +1,31 @@
 import discord
-from discord import embeds
 from discord import errors
 from discord_slash.utils import manage_components
 from discord_slash.model import ButtonStyle
 
 import errors
+import products
 
 stockx_price_buttons = [
     manage_components.create_button(
         style=ButtonStyle.green,
         label="Level 1",
-        custom_id="stockx_profit_button1",
+        custom_id="stockx_payout_button1",
     ),
     manage_components.create_button(
         style=ButtonStyle.green,
         label="Level 2",
-        custom_id="stockx_profit_button2",
+        custom_id="stockx_payout_button2",
     ),
     manage_components.create_button(
         style=ButtonStyle.green,
         label="Level 3",
-        custom_id="stockx_profit_button3",
+        custom_id="stockx_payout_button3",
     ),
     manage_components.create_button(
         style=ButtonStyle.green,
         label="Level 4",
-        custom_id="stockx_profit_button4",
+        custom_id="stockx_payout_button4",
     ),
     manage_components.create_button(
         style=ButtonStyle.grey,
@@ -37,7 +37,7 @@ stockx_button_row = manage_components.create_actionrow(*stockx_price_buttons)
 
 goat_price_buttons = [
     manage_components.create_button(
-        style=ButtonStyle.green, label="Profit", custom_id="goat_profit_button"
+        style=ButtonStyle.green, label="Payout", custom_id="goat_payout_button"
     ),
     manage_components.create_button(
         style=ButtonStyle.grey, label="Listing", custom_id="goat_listing_button"
@@ -47,7 +47,7 @@ goat_button_row = manage_components.create_actionrow(*goat_price_buttons)
 
 sg_price_buttons = [
     manage_components.create_button(
-        style=ButtonStyle.green, label="Profit", custom_id="sg_profit_button"
+        style=ButtonStyle.green, label="Payout", custom_id="sg_payout_button"
     ),
     manage_components.create_button(
         style=ButtonStyle.grey, label="Listing", custom_id="sg_listing_button"
@@ -56,16 +56,16 @@ sg_price_buttons = [
 sg_button_row = manage_components.create_actionrow(*sg_price_buttons)
 
 
-async def send_listing(info: dict, ctx, editing: bool):
+async def send_listing(product: products.Product, ctx, editing: bool):
     embed = discord.Embed(
-        title=info["title"],
-        url=info["url"],
-        color=info["color"],
+        title=product.get_title(),
+        url=product.get_url(),
+        color=product.get_color(),
     )
-    embed.set_thumbnail(url=info["thumbnail"])
-    embed.add_field(name="SKU:", value=info["sku"], inline=True)
+    embed.set_thumbnail(url=product.get_thumbnail())
+    embed.add_field(name="SKU:", value=product.get_sku(), inline=True)
     embed.add_field(name="⠀", value="⠀", inline=True)
-    embed.add_field(name="Retail Price:", value=info["retail price"], inline=True)
+    embed.add_field(name="Retail Price:", value=product.get_retail_price(), inline=True)
     prices = info["sizes"]["prices"]
     # if the product has asks and bids for each size
     if info["sizes"]["asks and bids"]:
