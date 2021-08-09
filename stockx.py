@@ -3,6 +3,7 @@ import json
 import re
 
 import errors
+import products
 
 # scrape stockx and return a json
 def scrape(keywords) -> json:
@@ -37,9 +38,6 @@ def get_api_key() -> str:
         script = script.rstrip(script[-1])
         script = json.loads(script)
         return script["search"]["SEARCH_ONLY_API_KEY"]
-
-def calculate_price(price, processing_fee, selling_fee) -> float:
-    return round(price * ((100.00 - (processing_fee + selling_fee))/100), 2)
 
 def get_prices(name):
     keywords = name.replace(" ", "%20")
@@ -79,14 +77,6 @@ def get_prices(name):
             break
         ask = current_size["market"]["lowestAsk"]
         bid = current_size["market"]["highestBid"]
-        ask_profit_level1 = 0
-        ask_profit_level2 = 0
-        ask_profit_level3 = 0
-        ask_profit_level4 = 0
-        bid_profit_level1 = 0
-        bid_profit_level2 = 0
-        bid_profit_level3 = 0
-        bid_profit_level4 = 0
         if ask == 0:
             ask = "N/A"
         else:
@@ -164,5 +154,4 @@ def get_prices(name):
             info["retail price"] = f"${retail_price['value']}"
         info["sizes"]["one size"] = True
 
-    
     return info
