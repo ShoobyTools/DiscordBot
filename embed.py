@@ -66,31 +66,31 @@ async def send_listing(product: products.Product, ctx, editing: bool):
     embed.add_field(name="SKU:", value=product.get_sku(), inline=True)
     embed.add_field(name="⠀", value="⠀", inline=True)
     embed.add_field(name="Retail Price:", value=product.get_retail_price(), inline=True)
-    prices = info["sizes"]["prices"]
+    prices = product.get_prices()
     # if the product has asks and bids for each size
-    if info["sizes"]["asks and bids"]:
+    if product.asks_and_bids():
         # if the item has more than one size
-        if not info["sizes"]["one size"]:
-            for size in prices:
-                ask = prices[size]["ask"]
-                bid = prices[size]["bid"]
-                embed.add_field(
-                    name=size,
-                    value=f"```bash\nAsk: {ask['listing']}\nBid: {bid['listing']}```",
-                    inline=True,
-                )
+        # # if not info["sizes"]["one size"]:
+        for size in prices:
+            ask = prices[size]["ask"]
+            bid = prices[size]["bid"]
+            embed.add_field(
+                name=size,
+                value=f"```bash\nAsk: {ask['listing']}\nBid: {bid['listing']}```",
+                inline=True,
+            )
         # if the item has only one size
-        else:
-            embed.add_field(
-                name="Ask",
-                value=f"```bash\n{prices['']['ask']['listing']}```",
-                inline=True,
-            )
-            embed.add_field(
-                name="Bid",
-                value=f"```bash\n{prices['']['bid']['listing']}```",
-                inline=True,
-            )
+        # # else:
+        # #     embed.add_field(
+        # #         name="Ask",
+        # #         value=f"```bash\n{prices['']['ask']['listing']}```",
+        # #         inline=True,
+        # #     )
+        # #     embed.add_field(
+        # #         name="Bid",
+        # #         value=f"```bash\n{prices['']['bid']['listing']}```",
+        # #         inline=True,
+        # #     )
     # if the item doesn't have asks and bids
     else:
         for size in prices:
@@ -100,16 +100,16 @@ async def send_listing(product: products.Product, ctx, editing: bool):
                 inline=True,
             )
     embed.set_footer(
-        text=info["footer text"],
-        icon_url=info["footer image"],
+        text=product.get_footer_text(),
+        icon_url=product.get_footer_image(),
     )
 
     if not editing:
-        if info["footer text"] == "StockX":
+        if product.get_footer_text() == "StockX":
             await ctx.send(embed=embed, components=[stockx_button_row])
-        elif info["footer text"] == "Goat":
+        elif product.get_footer_text() == "Goat":
             await ctx.send(embed=embed, components=[goat_button_row])
-        elif info["footer text"] == "Stadium Goods":
+        elif product.get_footer_text() == "Stadium Goods":
             await ctx.send(embed=embed, components=[sg_button_row])
     else:
         await ctx.edit_origin(embed=embed)

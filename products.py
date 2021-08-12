@@ -11,6 +11,7 @@ class Product:
         footer_text: str,
         footer_image: str,
         processing_fee: float,
+        asks_and_bids: bool,
         category=None,
     ) -> None:
         self._title = title
@@ -21,6 +22,7 @@ class Product:
         self._footer_image = footer_image
         self._sku = None
         self._retail_price = None
+        self._asks_and_bids = asks_and_bids
         self._processing_fee = processing_fee
         self._selling_fees = []
         self._category = category
@@ -31,14 +33,14 @@ class Product:
         for fee in self._selling_fees:
             payout = price
             if price:
-                payout = round(price * ((100.00 - (self._processing_fees + fee)) / 100), 2)
+                payout = round(price * ((100.00 - (self._processing_fee + fee)) / 100), 2)
 
             all_level_payouts.append(payout)
         
         return all_level_payouts
 
 
-    def _cleanup_size(size: str) -> str:
+    def _cleanup_size(self, size: str) -> str:
         return size.strip("W").strip("Y")
 
 # ------------------------------------------------------------------------------
@@ -49,50 +51,71 @@ class Product:
 
     def set_sku(self, sku: str) -> None:
         self._sku = sku.replace(" ", "-")
-    
+
     def set_retail_price(self, retail_price: int) -> None:
         self._retail_price = retail_price
 
-    def set_ask(self, size: str, ask: int) -> None:
+    def set_prices(self, size: str, ask: int, bid = None) -> None:
         _size = self._cleanup_size(size)
         if ask == 0:
             _ask = None
         else:
             _ask = ask
-        self._sizes[_size]["ask"]["listing"] = _ask
-        all_payouts = self._calculate_payouts(_ask)
+   
+        all_ask_payouts = self._calculate_payouts(_ask)
 
-        payouts = {}
+        ask_payouts = {}
         level = 1
-        for payout in all_payouts:
-            payouts[level] = payout
+        for payout in all_ask_payouts:
+            ask_payouts[level] = payout
             level += 1
-        
-        self._sizes[_size]["ask"]["payouts"] = payouts
-        self._sizes[_size]["bid"] = None
 
-
-    def set_bid(self, size: str, bid: int) -> None:
-        _size = self._cleanup_size(size)
-        if bid == 0:
-            _bid = None
+        if not self.asks_and_bids():
+            size_info = {
+                _size : {
+                    "ask": {
+                        "listing": _ask,
+                        "payouts": ask_payouts
+                    },
+                    "bid": None
+                }
+            }
         else:
-            _bid = bid
-        self._sizes[_size]["bid"]["listing"] = _bid
-        all_payouts = self._calculate_payouts(_bid)
+            if bid == 0:
+                _bid = None
+            else:
+                _bid = bid
+            
+            all_bid_payouts = self._calculate_payouts(_bid)
 
-        payouts = {}
-        level = 1
-        for payout in all_payouts:
-            payouts[level] = payout
-            level += 1
-        
-        self._sizes[_size]["bid"]["payouts"] = payouts
+            bid_payouts = {}
+            level = 1
+            for payout in all_bid_payouts:
+                bid_payouts[level] = payout
+                level += 1
+            size_info = {
+                _size : {
+                    "ask": {
+                        "listing": _ask,
+                        "payouts": ask_payouts
+                    },
+                    "bid": {
+                        "listing": _bid,
+                        "payouts": bid_payouts
+                    }
+                }
+            }
+
+
+        self._sizes.update(size_info)
 
 
 # ------------------------------------------------------------------------------
 #  GETTERS
 # ------------------------------------------------------------------------------    
+    def get_prices(self) -> dict:
+        return self._sizes
+    
     def get_title(self) -> str:
         return self._title
 
@@ -117,11 +140,14 @@ class Product:
         else:
             return "N/A"
     
-    def get_retail_price(self) -> int:
+    def get_retail_price(self) -> str:
         if self._retail_price:
-            return self._retail_price
+            return str(self._retail_price)
         else:
             return "N/A"
     
+    def asks_and_bids(self) -> bool:
+        return self._asks_and_bids
+
     def get_category(self) -> str:
         return self._category

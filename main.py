@@ -27,6 +27,8 @@ slash = SlashCommand(client, sync_commands=True)
 
 @client.event
 async def on_ready():
+    print("ready")
+    
     await client.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.listening, name="Type /info for help"

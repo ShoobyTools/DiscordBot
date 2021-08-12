@@ -73,44 +73,45 @@ def get_prices(name):
         footer_text="StockX",
         footer_image="https://cdn.discordapp.com/attachments/734938642790744097/771078700178866226/stockx.png",
         processing_fee=3.0,
-        category=general["contentGroup"]
+        asks_and_bids=True,
+        category=general["contentGroup"],
     )
     product.add_seller_fee(9.5)
     product.add_seller_fee(9.0)
     product.add_seller_fee(8.5)
     product.add_seller_fee(8.0)
 
-
     for child in general["children"]:
         current_size = general["children"][child]
         if current_size["shoeSize"] == "15":
             break
-        ask = current_size["market"]["lowestAsk"]
-        bid = current_size["market"]["highestBid"]
 
-        product.set_ask(current_size["shoeSize"], ask)
-        product.set_bid(current_size["shoeSize"], bid)
-
+        product.set_prices(
+            size=current_size["shoeSize"],
+            ask=current_size["market"]["lowestAsk"],
+            bid=current_size["market"]["highestBid"],
+        )
 
     if product.get_category() == "sneakers":
         if "styleId" in general:
             product.set_sku(general["styleId"])
         if "retailPrice" in general:
-            product.set_retail_price(general['retailPrice'])
+            product.set_retail_price(general["retailPrice"])
     elif product.get_category() == "streetwear-clothing":
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
         if retail_price:
-            product.set_retail_price(retail_price['value'])
-    elif product.get_category() == "collectibles" or product.get_category() == "handbags":
+            product.set_retail_price(retail_price["value"])
+    elif (
+        product.get_category() == "collectibles" or product.get_category() == "handbags"
+    ):
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
         if retail_price:
-            product.set_retail_price(retail_price['value'])
+            product.set_retail_price(retail_price["value"])
     else:
         raise errors.ProductNotSupported
-
 
     return product
