@@ -1,7 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+
 import errors
+import products
 
 def int_or_float(num):
     try:
@@ -53,27 +55,20 @@ def get_prices(name):
     
     data = data["data"]["configurableProducts"]["edges"][0]["node"]
 
-    seller_fees = {
-        "processing fee": 0.0,
-        0: 20.0
-    }
-    prices = {}
-    info = {
-        "title": f"{data['name']} {data['nickname']}",
-        "url": data["pdpUrl"],
-        "thumbnail": data["smallImage"]["url"],
-        "sku": data["manufacturerSku"].replace(" ", "-"),
-        "retail price": "N/A",
-        "sizes": {
-            "seller fees": seller_fees,
-            "asks and bids": False,
-            "one size": False,
-            "prices": prices
-        },
-        "color": 0xFFA500,
-        "footer text": "Stadium Goods",
-        "footer image": "https://media.discordapp.net/attachments/734938642790744097/859866121033089064/sg.jpg"
-    }
+
+    product = products.Product(
+        title=f"{data['name']} {data['nickname']}",
+        url=data["pdpUrl"],
+        thumbnail=data["smallImage"]["url"],
+        color=0xFFA500,
+        footer_text="Stadium Goods",
+        footer_image="https://media.discordapp.net/attachments/734938642790744097/859866121033089064/sg.jpg",
+        processing_fee=0.0,
+        asks_and_bids=False,
+    )
+    product.add_seller_fee(20.0)
+
+    product.set_sku(data["manufacturerSku"].replace(" ", "-"))
 
     header = {
         "user-agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -89,7 +84,7 @@ def get_prices(name):
             break
         price = option.find("span", {"class" :"product-sizes__price"}).text.strip("\n")
         if "Notify me" in price:
-            price = "N/A"
+            price = 0
         else:
             price = price.replace(".00", "")
             price = int(price.strip("$"))
@@ -98,16 +93,10 @@ def get_prices(name):
     prices.sort()
 
     for price in prices:
-        current_size = price[0]
-        current_price = price[1]
+        size = str(price[0])
+        price = price[1]
 
-        profit = "N/A"
-        if current_price != "N/A":
-            profit = calculate_price(current_price, seller_fees["processing fee"], seller_fees[0])
-        info["sizes"]["prices"][current_size] = {
-            "listing": str(current_price),
-            0: profit
-        }
+        product.set_prices(size, price)
 
-    return info
+    return product
 

@@ -109,6 +109,7 @@ def get_prices(name):
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
+        product.set_one_size()
         if retail_price:
             product.set_retail_price(retail_price["value"])
     else:

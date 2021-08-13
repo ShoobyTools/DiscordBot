@@ -65,38 +65,53 @@ async def send_listing(product: products.Product, ctx, editing: bool):
     embed.set_thumbnail(url=product.get_thumbnail())
     embed.add_field(name="SKU:", value=product.get_sku(), inline=True)
     embed.add_field(name="⠀", value="⠀", inline=True)
-    embed.add_field(name="Retail Price:", value=product.get_retail_price(), inline=True)
+    embed.add_field(
+        name="Retail Price:", value=product.get_retail_price(), inline=True
+    )
     prices = product.get_prices()
     # if the product has asks and bids for each size
     if product.asks_and_bids():
         # if the item has more than one size
-        # # if not info["sizes"]["one size"]:
-        for size in prices:
-            ask = prices[size]["ask"]
-            bid = prices[size]["bid"]
+        if not product.one_size():
+            for size in prices:
+                ask = prices[size]["ask"]["listing"]
+                bid = prices[size]["bid"]["listing"]
+                if ask:
+                    ask = f"${ask}"
+                if bid:
+                    bid = f"${bid}"
+                embed.add_field(
+                    name=size,
+                    value=f"```bash\nAsk: {ask}\nBid: {bid}```",
+                    inline=True,
+                )
+        # if the item has only one size
+        else:
+            ask = prices['']['ask']['listing']
+            bid = prices['']['bid']['listing']
+            if ask:
+                ask = f"${ask}"
+            if bid:
+                bid = f"${bid}"
             embed.add_field(
-                name=size,
-                value=f"```bash\nAsk: {ask['listing']}\nBid: {bid['listing']}```",
+                name="Ask",
+                value=f"```bash\n{ask}```",
                 inline=True,
             )
-        # if the item has only one size
-        # # else:
-        # #     embed.add_field(
-        # #         name="Ask",
-        # #         value=f"```bash\n{prices['']['ask']['listing']}```",
-        # #         inline=True,
-        # #     )
-        # #     embed.add_field(
-        # #         name="Bid",
-        # #         value=f"```bash\n{prices['']['bid']['listing']}```",
-        # #         inline=True,
-        # #     )
+            embed.add_field(
+                name="Bid",
+                value=f"```bash\n{bid}```",
+                inline=True,
+            )
     # if the item doesn't have asks and bids
     else:
         for size in prices:
+            listing = prices[size]['listing']
+            if listing:
+                listing = f"${listing}"
             embed.add_field(
                 name=size,
-                value=f"```bash\n${prices[size]['listing']}```",
+                value=f"```bash\n{listing}```",
                 inline=True,
             )
     embed.set_footer(

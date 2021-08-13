@@ -1,3 +1,4 @@
+from inspect import FullArgSpec
 import requests
 import json
 
@@ -55,7 +56,8 @@ def get_prices(name):
         color=0xFFFFFE,
         footer_text="Goat",
         footer_image="https://cdn.discordapp.com/attachments/734938642790744097/771077292881477632/goat.png",
-        processing_fee=2.9
+        processing_fee=2.9,
+        asks_and_bids=False,
     )
     product.add_seller_fee(9.5)
 
@@ -68,7 +70,7 @@ def get_prices(name):
                 break
             lowest_price = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
 
-            product.set_ask(size["size"], lowest_price)
+            product.set_prices(str(size["size"]), lowest_price)
 
     if "sku" in general:
         product.set_sku(general["sku"])
