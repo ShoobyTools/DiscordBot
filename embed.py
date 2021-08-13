@@ -130,44 +130,35 @@ async def send_listing(product: products.Product, ctx, editing: bool):
         await ctx.edit_origin(embed=embed)
 
 
-async def send_profit(info: dict, ctx, seller_level=0):
+async def send_payout(product: products.Product, ctx, seller_level=1):
     # if the product has no retail price then you can't calculate profit
-    if info["retail price"] == "N/A":
+    if product.get_retail_price() == "N/A":
         raise errors.NoRetailPrice
     embed = discord.Embed(
-        title=info["title"],
-        url=info["url"],
-        color=info["color"],
+        title=product.get_title(),
+        url=product.get_url(),
+        color=product.get_color(),
     )
-    embed.set_thumbnail(url=info["thumbnail"])
-    embed.add_field(name="SKU:", value=info["sku"], inline=True)
+    embed.set_thumbnail(url=product.get_thumbnail())
+    embed.add_field(name="SKU:", value=product.get_sku(), inline=True)
     embed.add_field(
         name="Fees",
-        value=f"{info['sizes']['seller fees'][seller_level]}% + {info['sizes']['seller fees']['processing fee']}%",
+        value=str(product.get_fees(seller_level)) + "%",
         inline=True,
     )
-    embed.add_field(name="Retail Price:", value=info["retail price"], inline=True)
-    prices = info["sizes"]["prices"]
+    embed.add_field(name="Retail Price:", value=product.get_retail_price(), inline=True)
+    prices = product.get_prices()
     # if the product has asks and bids for each size
-    if info["sizes"]["asks and bids"]:
+    if product.asks_and_bids():
         # if the item has more than one size
-        if not info["sizes"]["one size"]:
+        if not product.one_size():
             for size in prices:
-                ask = prices[size]["ask"]
-                bid = prices[size]["bid"]
-                retail = float(info["retail price"].strip("$"))
-                ask = float(ask[seller_level].strip("$"))
-                bid = float(bid[seller_level].strip("$"))
-                ask = round(ask - retail, 2)
-                bid = round(bid - retail, 2)
-                if bid < 0:
-                    bid = f"-${bid * -1}"
-                else:
-                    bid = "$" + str(bid)
-                if ask < 0:
-                    ask = f"-${ask * -1}"
-                else:
-                    ask = "$" + str(ask)
+                ask = prices[size]["ask"]["payouts"][seller_level]
+                bid = prices[size]["bid"]["payouts"][seller_level]
+                if ask:
+                    ask = f"${ask}"
+                if bid:
+                    bid = f"${bid}"
                 embed.add_field(
                     name=size,
                     value=f"```cpp\nAsk: {ask}\nBid: {bid}```",
@@ -175,22 +166,12 @@ async def send_profit(info: dict, ctx, seller_level=0):
                 )
         # if the item has only one size
         else:
-            ask = prices[""]["ask"]
-            bid = prices[""]["bid"]
-            if info["retail price"] != "N/A":
-                retail = float(info["retail price"].strip("$"))
-                ask = float(ask[seller_level].strip("$"))
-                bid = float(bid[seller_level].strip("$"))
-                ask = round(ask - retail, 2)
-                bid = round(bid - retail, 2)
-                if bid < 0:
-                    bid = f"-${bid * -1}"
-                else:
-                    bid = "$" + str(bid)
-                if ask < 0:
-                    ask = f"-${ask * -1}"
-                else:
-                    ask = "$" + str(ask)
+            ask = prices[""]["ask"]["payouts"][seller_level]
+            bid = prices[""]["bid"]["payouts"][seller_level]
+            if ask:
+                ask = f"${ask}"
+            if bid:
+                bid = f"${bid}"
             embed.add_field(
                 name="Ask",
                 value=f"```cpp\n{ask}```",
@@ -204,21 +185,16 @@ async def send_profit(info: dict, ctx, seller_level=0):
     # if the item doesn't have asks and bids
     else:
         for size in prices:
-            price = prices[size]
-            retail = float(info["retail price"].strip("$"))
-            price = float(price[seller_level])
-            price = round(price - retail, 2)
-            if price < 0:
-                price = f"-${price * -1}"
-            else:
-                price = "$" + str(price)
+            listing = prices[size]["payouts"][seller_level]
+            if listing:
+                listing = f"${listing}"
             embed.add_field(
                 name=size,
-                value=f"```cpp\n{price}```",
+                value=f"```cpp\n{listing}```",
                 inline=True,
             )
     embed.set_footer(
-        text=info["footer text"],
-        icon_url=info["footer image"],
+        text=product.get_footer_text(),
+        icon_url=product.get_footer_image(),
     )
     await ctx.edit_origin(embed=embed)

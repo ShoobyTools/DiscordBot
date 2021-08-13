@@ -121,16 +121,17 @@ class Product:
         return self._footer_image
 
     def get_sku(self) -> str:
-        if self._sku:
-            return self._sku
-        else:
-            return "N/A"
+        return self._sku
 
     def get_retail_price(self) -> str:
         if self._retail_price:
             return f"${self._retail_price}"
         else:
-            return "N/A"
+            return self._retail_price
+
+    def get_fees(self, level=1) -> float:
+        _level = level - 1
+        return self._processing_fee + self._selling_fees[_level]
 
     def asks_and_bids(self) -> bool:
         return self._asks_and_bids
