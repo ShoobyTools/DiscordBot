@@ -53,7 +53,7 @@ async def _help(ctx):
         inline=False,
     )
     embed.add_field(name="Goat", value="List Goat prices for a shoe.", inline=False)
-    embed.add_field(name="Compare", value="Compare StockX and Goat prices.", inline=False)
+    # embed.add_field(name="Compare", value="Compare StockX and Goat prices.", inline=False)
     embed.add_field(
         name="Vars",
         value="Get Shopify variants and stock if a site has it loaded (i.e. ShoePalace)",
@@ -71,7 +71,7 @@ async def _help(ctx):
         inline=False,
     )
     embed.add_field(name="g", value="List Goat prices for a shoe.", inline=False)
-    embed.add_field(name="c", value="Compare StockX and Goat prices.", inline=False)
+    # embed.add_field(name="c", value="Compare StockX and Goat prices.", inline=False)
     await ctx.send(embed=embed)
 
 # ==============================================================================
@@ -239,25 +239,25 @@ async def _sg(ctx, name: str):
 # Compare
 # ==============================================================================
 
-@slash.slash(
-    name="Compare",
-    description="Compare prices between StockX and Goat.",
-    guild_ids=GUILD_ID,
-)
-async def _compare(ctx, name):
-    try:
-        await compare.get_prices(name, ctx)
-    except errors.NoProductsFound:
-        await ctx.send("No products found. Try again.")
+# @slash.slash(
+#     name="Compare",
+#     description="Compare prices between StockX and Goat.",
+#     guild_ids=GUILD_ID,
+# )
+# async def _compare(ctx, name):
+#     try:
+#         await compare.get_prices(name, ctx)
+#     except errors.NoProductsFound:
+#         await ctx.send("No products found. Try again.")
 
-# .c command call
-@client.command(pass_context=True)
-async def c(ctx, *args):
-    name = ""
-    for word in args:
-        name += word + " "
-    name.strip()
-    await compare.get_prices(name, ctx)
+# # .c command call
+# @client.command(pass_context=True)
+# async def c(ctx, *args):
+#     name = ""
+#     for word in args:
+#         name += word + " "
+#     name.strip()
+#     await compare.get_prices(name, ctx)
 
 # ==============================================================================
 # Variants
