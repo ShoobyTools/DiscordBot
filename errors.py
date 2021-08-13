@@ -9,3 +9,6 @@ class SiteUnreachable(Error):
 
 class NoRetailPrice(Error):
     pass
+
+class ProductNotSupported(Error):
+    pass

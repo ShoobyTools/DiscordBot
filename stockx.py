@@ -3,6 +3,7 @@ import json
 import re
 
 import errors
+import products
 
 # scrape stockx and return a json
 def scrape(keywords) -> json:
@@ -23,6 +24,7 @@ def scrape(keywords) -> json:
         )
         return r.json()
 
+
 def get_api_key() -> str:
     header = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -38,8 +40,6 @@ def get_api_key() -> str:
         script = json.loads(script)
         return script["search"]["SEARCH_ONLY_API_KEY"]
 
-def calculate_price(price, processing_fee, selling_fee) -> float:
-    return round(price * ((100.00 - (processing_fee + selling_fee))/100), 2)
 
 def get_prices(name):
     keywords = name.replace(" ", "%20")
@@ -65,104 +65,54 @@ def get_prices(name):
     response = response.json()
     general = response["Product"]
 
-    seller_fees = {
-                "processing fee": 3.0,
-                1: 9.5,
-                2: 9.0,
-                3: 8.5,
-                4: 8.0
-            }
-    prices = {}
+    product = products.Product(
+        title=general["title"],
+        url=f"https://stockx.com/{general['urlKey']}",
+        thumbnail=general["media"]["thumbUrl"],
+        color=0x099F5F,
+        footer_text="StockX",
+        footer_image="https://cdn.discordapp.com/attachments/734938642790744097/771078700178866226/stockx.png",
+        processing_fee=3.0,
+        asks_and_bids=True,
+        category=general["contentGroup"],
+    )
+    product.add_seller_fee(9.5)
+    product.add_seller_fee(9.0)
+    product.add_seller_fee(8.5)
+    product.add_seller_fee(8.0)
+
     for child in general["children"]:
         current_size = general["children"][child]
         if current_size["shoeSize"] == "15":
             break
-        ask = current_size["market"]["lowestAsk"]
-        bid = current_size["market"]["highestBid"]
-        ask_profit_level1 = 0
-        ask_profit_level2 = 0
-        ask_profit_level3 = 0
-        ask_profit_level4 = 0
-        bid_profit_level1 = 0
-        bid_profit_level2 = 0
-        bid_profit_level3 = 0
-        bid_profit_level4 = 0
-        if ask == 0:
-            ask = "N/A"
-        else:
-            ask_profit_level1 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[1])}"
-            ask_profit_level2 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[2])}"
-            ask_profit_level3 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[3])}"
-            ask_profit_level4 = f"${calculate_price(ask, seller_fees['processing fee'], seller_fees[4])}"
-            ask = "$" + str(ask)
-        if bid == 0:
-            bid = "N/A"
-            ask_profit_level1 = "N/A"
-            ask_profit_level2 = "N/A"
-            ask_profit_level3 = "N/A"
-            ask_profit_level4 = "N/A"
-        else:
-            bid_profit_level1 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[1])}"
-            bid_profit_level2 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[2])}"
-            bid_profit_level3 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[3])}"
-            bid_profit_level4 = f"${calculate_price(bid, seller_fees['processing fee'], seller_fees[4])}"
-            bid = "$" + str(bid)
-        
-        ask_info = {
-            "listing": ask,
-            1: ask_profit_level1,
-            2: ask_profit_level2,
-            3: ask_profit_level3,
-            4: ask_profit_level4
-        }
 
-        bid_info = {
-            "listing": bid,
-            1: bid_profit_level1,
-            2: bid_profit_level2,
-            3: bid_profit_level3,
-            4: bid_profit_level4
-        }
-        prices[current_size["shoeSize"].strip("W").strip("Y")] = {
-            "ask": ask_info,
-            "bid": bid_info
-        }
-    info = {
-        "title": general["title"],
-        "url": f"https://stockx.com/{general['urlKey']}",
-        "thumbnail": general["media"]["thumbUrl"],
-        "sku": "N/A",
-        "retail price": "N/A",
-        "sizes": {
-            "seller fees": seller_fees,
-            "asks and bids": True,
-            "one size": False,
-            "prices": prices
-        },
-        "color": 0x099F5F,
-        "footer text": "StockX",
-        "footer image": "https://cdn.discordapp.com/attachments/734938642790744097/771078700178866226/stockx.png"
-    }
+        product.set_prices(
+            size=current_size["shoeSize"],
+            ask=current_size["market"]["lowestAsk"],
+            bid=current_size["market"]["highestBid"],
+        )
 
-    product_type = general["contentGroup"]
-    if product_type == "sneakers":
+    if product.get_category() == "sneakers":
         if "styleId" in general:
-            info["sku"] = general["styleId"]
+            product.set_sku(general["styleId"])
         if "retailPrice" in general:
-            info["retail price"] = f"${general['retailPrice']}"
-    elif product_type == "streetwear-clothing":
+            product.set_retail_price(general["retailPrice"])
+    elif product.get_category() == "streetwear-clothing":
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
         if retail_price:
-            info["retail price"] = f"${retail_price['value']}"
-    elif product_type == "collectibles" or product_type == "handbags":
+            product.set_retail_price(retail_price["value"])
+    elif (
+        product.get_category() == "collectibles" or product.get_category() == "handbags"
+    ):
         retail_price = next(
             (item for item in general["traits"] if item["name"] == "Retail"), None
         )
+        product.set_one_size()
         if retail_price:
-            info["retail price"] = f"${retail_price['value']}"
-        info["sizes"]["one size"] = True
+            product.set_retail_price(retail_price["value"])
+    else:
+        raise errors.ProductNotSupported
 
-    
-    return info
+    return product

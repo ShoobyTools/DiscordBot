@@ -27,6 +27,8 @@ slash = SlashCommand(client, sync_commands=True)
 
 @client.event
 async def on_ready():
+    print("ready")
+
     await client.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.listening, name="Type /info for help"
@@ -79,51 +81,51 @@ async def _help(ctx):
 # on button press
 # level 1
 @slash.component_callback()
-async def stockx_profit_button1(ctx: ComponentContext):
+async def stockx_payout_button1(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
     try:
-        await embed.send_profit(info, ctx, 1)
+        await embed.send_payout(info, ctx, 1)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
     except discord.errors.NotFound:
-        await embed.send_profit(info, ctx, 1)
+        await embed.send_payout(info, ctx, 1)
 
 # level 2
 @slash.component_callback()
-async def stockx_profit_button2(ctx: ComponentContext):
+async def stockx_payout_button2(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
     try:
-        await embed.send_profit(info, ctx, 2)
+        await embed.send_payout(info, ctx, 2)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
     except discord.errors.NotFound:
-        await embed.send_profit(info, ctx, 2)
+        await embed.send_payout(info, ctx, 2)
 
 # level 3
 @slash.component_callback()
-async def stockx_profit_button3(ctx: ComponentContext):
+async def stockx_payout_button3(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
     try:
-        await embed.send_profit(info, ctx, 3)
+        await embed.send_payout(info, ctx, 3)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
     except discord.errors.NotFound:
-        await embed.send_profit(info, ctx, 3)
+        await embed.send_payout(info, ctx, 3)
 
 # level 4
 @slash.component_callback()
-async def stockx_profit_button4(ctx: ComponentContext):
+async def stockx_payout_button4(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stockx.get_prices(title)
     try:
-        await embed.send_profit(info, ctx, 4)
+        await embed.send_payout(info, ctx, 4)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
     except discord.errors.NotFound:
-        await embed.send_profit(info, ctx, 4)
+        await embed.send_payout(info, ctx, 4)
 
 @slash.component_callback()
 async def stockx_listing_button(ctx: ComponentContext):
@@ -169,11 +171,11 @@ async def s(ctx, *args):
 
 # on button press
 @slash.component_callback()
-async def goat_profit_button(ctx: ComponentContext):
+async def goat_payout_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = goat.get_prices(title)
     try:
-        await embed.send_profit(info, ctx, 0)
+        await embed.send_payout(info, ctx)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
 
@@ -211,11 +213,11 @@ async def g(ctx, *args):
 
 # on button press
 @slash.component_callback()
-async def sg_profit_button(ctx: ComponentContext):
+async def sg_payout_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stadium_goods.get_prices(title)
     try:
-        await embed.send_profit(info, ctx, 0)
+        await embed.send_payout(info, ctx)
     except errors.NoRetailPrice:
         await ctx.edit_origin(content=":red_square: Retail price not available. :red_square:")
 
