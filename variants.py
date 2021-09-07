@@ -80,7 +80,7 @@ async def shoepalace(url, ctx):
     await ctx.send(embed=embed)
 
 
-async def get_vars(url, ctx):
+async def get_vars(url, nohalf, ctx):
     if "shoepalace" in url:
         await shoepalace(url, ctx)
         return
@@ -104,8 +104,11 @@ async def get_vars(url, ctx):
             size = await get_size(variant["option2"])
         if not size:
             size = await get_size(variant["option3"])
-        all_sizes += f"{size} \n"
-        all_variants += f"{variant['id']}\n"
+        if nohalf and ".5" in str(size):
+            continue
+        else:
+            all_sizes += f"{size} \n"
+            all_variants += f"{variant['id']}\n"
 
     all_sizes += "```"
     all_variants += "```"

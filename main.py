@@ -2,7 +2,7 @@ import discord
 from discord_slash import SlashCommand
 from discord.ext import commands
 from discord_slash.context import ComponentContext
-from discord_slash.utils.manage_components import wait_for_component
+from discord_slash.utils.manage_commands import create_option, create_choice
 
 import time
 import os
@@ -74,6 +74,7 @@ async def _help(ctx):
     # embed.add_field(name="c", value="Compare StockX and Goat prices.", inline=False)
     await ctx.send(embed=embed)
 
+
 # ==============================================================================
 # StockX
 # ==============================================================================
@@ -91,6 +92,7 @@ async def stockx_payout_button1(ctx: ComponentContext):
     except discord.errors.NotFound:
         await embed.send_payout(info, ctx, 1)
 
+
 # level 2
 @slash.component_callback()
 async def stockx_payout_button2(ctx: ComponentContext):
@@ -102,6 +104,7 @@ async def stockx_payout_button2(ctx: ComponentContext):
         await ctx.edit_origin(content="Retail price not available.")
     except discord.errors.NotFound:
         await embed.send_payout(info, ctx, 2)
+
 
 # level 3
 @slash.component_callback()
@@ -115,6 +118,7 @@ async def stockx_payout_button3(ctx: ComponentContext):
     except discord.errors.NotFound:
         await embed.send_payout(info, ctx, 3)
 
+
 # level 4
 @slash.component_callback()
 async def stockx_payout_button4(ctx: ComponentContext):
@@ -127,6 +131,7 @@ async def stockx_payout_button4(ctx: ComponentContext):
     except discord.errors.NotFound:
         await embed.send_payout(info, ctx, 4)
 
+
 @slash.component_callback()
 async def stockx_listing_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
@@ -135,6 +140,7 @@ async def stockx_listing_button(ctx: ComponentContext):
         await embed.send_listing(info, ctx, True)
     except discord.errors.NotFound:
         await embed.send_listing(info, ctx, True)
+
 
 # slash command call
 @slash.slash(name="StockX", description="Check StockX prices", guild_ids=GUILD_ID)
@@ -149,6 +155,7 @@ async def _stockx(ctx, name: str):
         await ctx.send("Error accessing StockX site (ERROR 403)")
     except discord.errors.NotFound:
         await embed.send_listing(info, context, False)
+
 
 # .s command call
 @client.command(pass_context=True)
@@ -165,6 +172,7 @@ async def s(ctx, *args):
     except errors.SiteUnreachable:
         await ctx.send("Error accessing StockX site (ERROR 403)")
 
+
 # ==============================================================================
 # Goat
 # ==============================================================================
@@ -179,11 +187,13 @@ async def goat_payout_button(ctx: ComponentContext):
     except errors.NoRetailPrice:
         await ctx.edit_origin(content="Retail price not available.")
 
+
 @slash.component_callback()
 async def goat_listing_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = goat.get_prices(title)
     await embed.send_listing(info, ctx, True)
+
 
 # slash command call
 @slash.slash(name="Goat", description="Check Goat prices", guild_ids=GUILD_ID)
@@ -193,6 +203,7 @@ async def _goat(ctx, name: str):
         await embed.send_listing(info, ctx, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
+
 
 # .g command call
 @client.command(pass_context=True)
@@ -207,6 +218,7 @@ async def g(ctx, *args):
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
 
+
 # ==============================================================================
 # Stadium Goods
 # ==============================================================================
@@ -219,13 +231,17 @@ async def sg_payout_button(ctx: ComponentContext):
     try:
         await embed.send_payout(info, ctx)
     except errors.NoRetailPrice:
-        await ctx.edit_origin(content=":red_square: Retail price not available. :red_square:")
+        await ctx.edit_origin(
+            content=":red_square: Retail price not available. :red_square:"
+        )
+
 
 @slash.component_callback()
 async def sg_listing_button(ctx: ComponentContext):
     title = ctx.origin_message.embeds[0].title
     info = stadium_goods.get_prices(title)
     await embed.send_listing(info, ctx, True)
+
 
 @slash.slash(name="SG", description="Check Stadium Goods prices", guild_ids=GUILD_ID)
 async def _sg(ctx, name: str):
@@ -234,6 +250,7 @@ async def _sg(ctx, name: str):
         await embed.send_listing(info, ctx, False)
     except errors.NoProductsFound:
         await ctx.send("No products found. Try again.")
+
 
 # ==============================================================================
 # Compare
@@ -263,9 +280,28 @@ async def _sg(ctx, name: str):
 # Variants
 # ==============================================================================
 
-@slash.slash(name="Vars", description="Get Shopify variants", guild_ids=GUILD_ID)
-async def _variants(ctx, link):
-    await variants.get_vars(link, ctx)
+
+@slash.slash(
+    name="Vars",
+    description="Get Shopify variants",
+    guild_ids=GUILD_ID,
+    options=[
+        create_option(
+            name="link",
+            description="Link to get vars from",
+            option_type=3,
+            required=True,
+        ),
+        create_option(
+            name="nohalf",
+            description="Remove half sizing in variants list",
+            option_type=5,
+            required=False,
+        )
+    ],
+)
+async def _variants(ctx, link, nohalf=False):
+    await variants.get_vars(link, nohalf, ctx)
 
 
 client.run(TOKEN)
