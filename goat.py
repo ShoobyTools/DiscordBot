@@ -37,17 +37,17 @@ def get_prices(name):
     }
 
     results = results["hits"][0]
-
-    apiurl_prices = f"https://www.goat.com/web-api/v1/product_variants?productTemplateId={results['slug']}"
+    
+    apiurl_prices = f"https://www.goat.com/web-api/v1/product_variants/buy_bar_data?productTemplateId={results['product_template_id']}"
     apiurl_general = (
-        f"https://www.goat.com/web-api/v1/product_templates/{results['slug']}"
+        f"https://www.goat.com/_next/data/sqZnmup21JC23QyZUKi2Y/en-US/sneakers/{results['slug']}.json?pageSlug=sneakers&productSlug={results['slug']}"
     )
 
     options = requests.get(apiurl_prices, verify=True, headers=header)
     general = requests.get(apiurl_general, verify=True, headers=header)
 
     options = options.json()
-    general = general.json()
+    general = general.json()["pageProps"]["productTemplate"]
 
     product = products.Product(
         title=general['name'],
@@ -66,11 +66,14 @@ def get_prices(name):
             size["boxCondition"] == "good_condition"
             and size["shoeCondition"] == "new_no_defects"
         ):
-            if size["size"] == 15:
+            if size["sizeOption"]["value"] == 15:
                 break
-            lowest_price = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
+            if size["stockStatus"] == "not_in_stock":
+                lowest_price = 0
+            else:
+                lowest_price = int(size["lowestPriceCents"]["amountUsdCents"] / 100)
 
-            product.set_prices(str(size["size"]), lowest_price)
+            product.set_prices(size["sizeOption"]["presentation"], lowest_price)
 
     if "sku" in general:
         product.set_sku(general["sku"])
