@@ -33,12 +33,11 @@ def get_api_key() -> str:
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
     }
     stock_page = requests.get("https://stockx.com/", verify=True, headers=header).text
-    script = re.findall(r"window.globalConstants = .*", stock_page)
+    script = re.findall(r"window.searchOnlyApiKey = .*", stock_page)
     if len(script) != 0:
-        script = script[0].replace("window.globalConstants = ", "")
-        script = script.rstrip(script[-1])
-        script = json.loads(script)
-        return script["search"]["SEARCH_ONLY_API_KEY"]
+        script = script[0].replace("window.searchOnlyApiKey = ", "")
+        script = script.rstrip(script[-1]).strip("'")
+        return script
 
 
 def get_prices(name):

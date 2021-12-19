@@ -40,7 +40,7 @@ def get_prices(name):
     
     apiurl_prices = f"https://www.goat.com/web-api/v1/product_variants/buy_bar_data?productTemplateId={results['product_template_id']}"
     apiurl_general = (
-        f"https://www.goat.com/_next/data/sqZnmup21JC23QyZUKi2Y/en-US/sneakers/{results['slug']}.json?pageSlug=sneakers&productSlug={results['slug']}"
+        f"https://www.goat.com/_next/data/dxe0D_HRq8UvcoQmr76-N/en-US/sneakers/{results['slug']}.json?pageSlug=sneakers&productSlug={results['slug']}"
     )
 
     options = requests.get(apiurl_prices, verify=True, headers=header)
