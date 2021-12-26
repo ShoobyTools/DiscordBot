@@ -2,17 +2,17 @@ import discord
 from discord_slash import SlashCommand
 from discord.ext import commands
 from discord_slash.context import ComponentContext
-from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.utils.manage_commands import create_option
 
-import time
 import os
 from dotenv import load_dotenv
 
 import stockx
 import goat
 import stadium_goods
-import compare
 import variants
+
+import gas
 
 import embed
 import errors
@@ -74,6 +74,43 @@ async def _help(ctx):
     # embed.add_field(name="c", value="Compare StockX and Goat prices.", inline=False)
     await ctx.send(embed=embed)
 
+
+# ==============================================================================
+#  NFT
+# ==============================================================================
+
+
+@slash.slash(
+    name="gas",
+    description="Calculate ETH costs based on gas limit",
+    options=[
+        create_option(
+            name="limit",
+            description="The gas limit from the contract",
+            option_type=4,
+            required=True,
+        ),
+        create_option(
+            name="price",
+            description="The price in ETH for 1 NFT",
+            option_type=3,
+            required=True,
+        ),
+        create_option(
+            name="number",
+            description="The number of mints in one tx",
+            option_type=4,
+            required=True,
+        ),
+        create_option(
+            name="custom", description="Custom gas price", option_type=4, required=False
+        ),
+    ],
+    guild_ids=GUILD_ID
+)
+async def _gas(ctx, limit, price, number, custom=-1):
+    costs = gas.calculate(limit, float(price), number, custom)
+    await embed.send_gas(ctx, costs)
 
 # ==============================================================================
 # StockX
@@ -297,7 +334,7 @@ async def _sg(ctx, name: str):
             description="Remove half sizing in variants list",
             option_type=5,
             required=False,
-        )
+        ),
     ],
 )
 async def _variants(ctx, link, nohalf=False):
