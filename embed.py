@@ -1,5 +1,6 @@
 import discord
 from discord import errors
+from discord import embeds
 from discord_slash.utils import manage_components
 from discord_slash.model import ButtonStyle
 
@@ -65,9 +66,7 @@ async def send_listing(product: products.Product, ctx, editing: bool):
     embed.set_thumbnail(url=product.get_thumbnail())
     embed.add_field(name="SKU:", value=product.get_sku(), inline=True)
     embed.add_field(name="⠀", value="⠀", inline=True)
-    embed.add_field(
-        name="Retail Price:", value=product.get_retail_price(), inline=True
-    )
+    embed.add_field(name="Retail Price:", value=product.get_retail_price(), inline=True)
     prices = product.get_prices()
     # if the product has asks and bids for each size
     if product.asks_and_bids():
@@ -87,8 +86,8 @@ async def send_listing(product: products.Product, ctx, editing: bool):
                 )
         # if the item has only one size
         else:
-            ask = prices['']['ask']['listing']
-            bid = prices['']['bid']['listing']
+            ask = prices[""]["ask"]["listing"]
+            bid = prices[""]["bid"]["listing"]
             if ask:
                 ask = f"${ask}"
             if bid:
@@ -106,7 +105,7 @@ async def send_listing(product: products.Product, ctx, editing: bool):
     # if the item doesn't have asks and bids
     else:
         for size in prices:
-            listing = prices[size]['listing']
+            listing = prices[size]["listing"]
             if listing:
                 listing = f"${listing}"
             embed.add_field(
@@ -198,3 +197,27 @@ async def send_payout(product: products.Product, ctx, seller_level=1):
         icon_url=product.get_footer_image(),
     )
     await ctx.edit_origin(embed=embed)
+
+
+async def send_gas(ctx, costs):
+    embed = discord.Embed(title="Max ETH Costs", color=0x006097)
+    embed.add_field(
+        name="Info",
+        value=f"```cpp\nPrice Per: {costs[0].price}\nNumber of NFTs: {costs[0].num}\nGas limit: {costs[0].limit}```",
+        inline=False
+    )
+    gas = "```\n"
+    totals = "```\n"
+    averages = "```\n"
+    for cost in costs:
+        gas += str(cost.gas) + "\n"
+        totals += str(cost.total) + "\n"
+        averages += str(cost.average) + "\n"
+    gas += "```"
+    totals += "```"
+    averages += "```"
+    embed.add_field(name="Gas Price (GWEI)", value=gas, inline=True)
+    embed.add_field(name="Total (ETH)", value=totals, inline=True)
+    embed.add_field(name="Average (ETH)", value=averages, inline=True)
+
+    await ctx.send(embed=embed)
