@@ -1,6 +1,5 @@
 import discord
 from discord import errors
-from discord import embeds
 from discord_slash.utils import manage_components
 from discord_slash.model import ButtonStyle
 
@@ -219,5 +218,17 @@ async def send_gas(ctx, costs):
     embed.add_field(name="Gas Price (GWEI)", value=gas, inline=True)
     embed.add_field(name="Total (ETH)", value=totals, inline=True)
     embed.add_field(name="Average (ETH)", value=averages, inline=True)
+
+    await ctx.send(embed=embed)
+
+async def send_token(ctx, token):
+    embed = discord.Embed(title=token.name, url=token.url ,color=0x86DC3D)
+    if token.image:
+        embed.set_thumbnail(url=token.image)
+    embed.add_field(
+        name="Info",
+        value=f"```cpp\nAdress: {token.address}\nPrice: ${token.price:.20f}```",
+        inline=True
+    )
 
     await ctx.send(embed=embed)
