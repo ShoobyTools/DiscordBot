@@ -1,3 +1,4 @@
+from logging import error
 import discord
 from discord_slash import SlashCommand
 from discord.ext import commands
@@ -7,12 +8,15 @@ from discord_slash.utils.manage_commands import create_option
 import os
 from dotenv import load_dotenv
 
+# shoe stuff
 import stockx
 import goat
 import stadium_goods
 import variants
 
+# crypto stuff
 import gas
+import dex
 
 import embed
 import errors
@@ -79,7 +83,6 @@ async def _help(ctx):
 #  NFT
 # ==============================================================================
 
-
 @slash.slash(
     name="gas",
     description="Calculate ETH costs based on gas limit",
@@ -111,6 +114,29 @@ async def _help(ctx):
 async def _gas(ctx, limit, price, number, custom=-1):
     costs = gas.calculate(limit, float(price), number, custom)
     await embed.send_gas(ctx, costs)
+
+@slash.slash(
+    name="token-price",
+    description="Get a token's price from dextools",
+    options=[
+        create_option(
+            name="token",
+            description="Token name or address",
+            option_type=3,
+            required=True,
+        ),
+    ],
+    guild_ids=GUILD_ID
+)
+async def _token(ctx, token):
+    try:
+        await embed.send_token(ctx, dex.check(token))
+    except errors.NoTokenFound:
+        await ctx.send(f"Token `{token}` not found")
+    except errors.Unsupported:
+        await ctx.send("Token addresses are not supported at the moment, please use the token symbol instead.")
+    except errors.SiteUnreachable:
+        await ctx.send("Site unreachable. Try again later.")
 
 # ==============================================================================
 # StockX
