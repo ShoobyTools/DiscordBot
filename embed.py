@@ -232,3 +232,14 @@ async def send_token(ctx, token):
     )
 
     await ctx.send(embed=embed)
+
+async def send_contract(ctx, contract):
+    embed = discord.Embed(title=contract.symbol ,color=0x6699CC)
+    embed.set_thumbnail(url=contract.image)
+    embed.add_field(
+        name="Contract",
+        value=f"```cpp\nAdress: {contract.address}```[Etherscan]({contract.url})",
+        inline=True
+    )
+
+    await ctx.send(embed=embed)

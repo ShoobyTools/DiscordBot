@@ -17,6 +17,7 @@ import variants
 # crypto stuff
 import gas
 import dex
+import opensea
 
 import embed
 import errors
@@ -135,6 +136,27 @@ async def _token(ctx, token):
         await ctx.send(f"Token `{token}` not found")
     except errors.Unsupported:
         await ctx.send("Token addresses are not supported at the moment, please use the token symbol instead.")
+    except errors.SiteUnreachable:
+        await ctx.send("Site unreachable. Try again later.")
+
+@slash.slash(
+    name="contract",
+    description="Get a token's contract given an Opensea URL",
+    options=[
+        create_option(
+            name="url",
+            description="Opensea URL",
+            option_type=3,
+            required=True,
+        ),
+    ],
+    guild_ids=GUILD_ID
+)
+async def _contract(ctx, url):
+    try:
+        await embed.send_contract(ctx, opensea.get_contract(url))
+    except errors.Unsupported:
+        await ctx.send("Only full Opensea collection URLs are supported at the moment.")
     except errors.SiteUnreachable:
         await ctx.send("Site unreachable. Try again later.")
 
