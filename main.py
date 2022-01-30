@@ -95,6 +95,12 @@ async def _help(ctx):
             required=True,
         ),
         create_option(
+            name="utilization",
+            description="What percentage of the contract the TX will utilize",
+            option_type=4,
+            required=True,
+        ),
+        create_option(
             name="price",
             description="The price in ETH for 1 NFT",
             option_type=3,
@@ -112,8 +118,8 @@ async def _help(ctx):
     ],
     guild_ids=GUILD_ID
 )
-async def _gas(ctx, limit, price, number, custom=-1):
-    costs = gas.calculate(limit, float(price), number, custom)
+async def _gas(ctx, limit, utilization, price, number, custom=-1):
+    costs = gas.calculate(limit, utilization, float(price), number, custom)
     await embed.send_gas(ctx, costs)
 
 @slash.slash(
