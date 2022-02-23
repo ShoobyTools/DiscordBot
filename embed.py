@@ -249,7 +249,7 @@ async def send_contract(ctx, contract):
     embed.set_thumbnail(url=contract.image)
     embed.add_field(
         name="Contract",
-        value=f"```cpp\nAdress: {contract.address}```[Etherscan]({contract.url})",
+        value=f"Address: ```cpp\n{contract.address}```[Etherscan]({contract.url})\n[Moby](https://moby.gg/collection/{contract.address})",
         inline=True
     )
 
