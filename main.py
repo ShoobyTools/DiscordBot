@@ -1,15 +1,13 @@
-from logging import error
 import discord
 from discord_slash import SlashCommand
 from discord.ext import commands
-from discord_slash.context import ComponentContext
 from discord_slash.utils.manage_commands import create_option
-
+import requests
 import os
 from dotenv import load_dotenv
 
 # shoe stuff
-import stockx
+from stockx import stockX
 import goat
 import stadium_goods
 import variants
@@ -170,82 +168,22 @@ async def _contract(ctx, url):
 # StockX
 # ==============================================================================
 
-# on button press
-# level 1
-@slash.component_callback()
-async def stockx_payout_button1(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = stockx.get_prices(title)
-    try:
-        await embed.send_payout(info, ctx, 1)
-    except errors.NoRetailPrice:
-        await ctx.edit_origin(content="Retail price not available.")
-    except discord.errors.NotFound:
-        await embed.send_payout(info, ctx, 1)
-
-
-# level 2
-@slash.component_callback()
-async def stockx_payout_button2(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = stockx.get_prices(title)
-    try:
-        await embed.send_payout(info, ctx, 2)
-    except errors.NoRetailPrice:
-        await ctx.edit_origin(content="Retail price not available.")
-    except discord.errors.NotFound:
-        await embed.send_payout(info, ctx, 2)
-
-
-# level 3
-@slash.component_callback()
-async def stockx_payout_button3(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = stockx.get_prices(title)
-    try:
-        await embed.send_payout(info, ctx, 3)
-    except errors.NoRetailPrice:
-        await ctx.edit_origin(content="Retail price not available.")
-    except discord.errors.NotFound:
-        await embed.send_payout(info, ctx, 3)
-
-
-# level 4
-@slash.component_callback()
-async def stockx_payout_button4(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = stockx.get_prices(title)
-    try:
-        await embed.send_payout(info, ctx, 4)
-    except errors.NoRetailPrice:
-        await ctx.edit_origin(content="Retail price not available.")
-    except discord.errors.NotFound:
-        await embed.send_payout(info, ctx, 4)
-
-
-@slash.component_callback()
-async def stockx_listing_button(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = stockx.get_prices(title)
-    try:
-        await embed.send_listing(info, ctx, True)
-    except discord.errors.NotFound:
-        await embed.send_listing(info, ctx, True)
-
-
 # slash command call
 @slash.slash(name="StockX", description="Check StockX prices", guild_ids=GUILD_ID)
 async def _stockx(ctx, name: str):
     context = ctx
     try:
-        info = stockx.get_prices(name)
-        await embed.send_listing(info, context, False)
+        info = stockX(name)
+        await embed.send_listing(info, context)
     except errors.NoProductsFound:
-        await ctx.send("No products found. Try again.")
+        await ctx.send(f"`{name} not found`")
     except errors.SiteUnreachable:
-        await ctx.send("Error accessing StockX site (ERROR 403)")
+        await ctx.send("`Error accessing StockX site (ERROR 403)`")
     except discord.errors.NotFound:
-        await embed.send_listing(info, context, False)
+        await embed.send_listing(info, context)
+    except Exception as e:
+        await ctx.send("`Unknown error`")
+        print("error on " + name)
 
 
 # .s command call
@@ -256,44 +194,28 @@ async def s(ctx, *args):
         name += word + " "
     name.strip()
     try:
-        info = stockx.get_prices(name)
-        await embed.send_listing(info, ctx, False)
+        info = stockX(name)
+        await embed.send_listing(info, ctx)
     except errors.NoProductsFound:
-        await ctx.send("No products found. Try again.")
+        await ctx.send(f"`{name} not found`")
     except errors.SiteUnreachable:
-        await ctx.send("Error accessing StockX site (ERROR 403)")
+        await ctx.send("`Error accessing StockX site (ERROR 403)`")
+    except Exception as e:
+        await ctx.send("`Unknown error`")
+        print("error on " + name)
 
 
 # ==============================================================================
 # Goat
 # ==============================================================================
 
-# on button press
-@slash.component_callback()
-async def goat_payout_button(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = goat.get_prices(title)
-    try:
-        await embed.send_payout(info, ctx)
-    except errors.NoRetailPrice:
-        await ctx.edit_origin(content="Retail price not available.")
-
-
-@slash.component_callback()
-async def goat_listing_button(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = goat.get_prices(title)
-    await embed.send_listing(info, ctx, True)
-
-
 # slash command call
 @slash.slash(name="Goat", description="Check Goat prices", guild_ids=GUILD_ID)
 async def _goat(ctx, name: str):
     try:
-        info = goat.get_prices(name)
-        await embed.send_listing(info, ctx, False)
+        await ctx.send("`Currently not working`")
     except errors.NoProductsFound:
-        await ctx.send("No products found. Try again.")
+        await ctx.send(f"`{name} not found`")
 
 
 # .g command call
@@ -304,43 +226,21 @@ async def g(ctx, *args):
         name += word + " "
     name.strip()
     try:
-        info = goat.get_prices(name)
-        await embed.send_listing(info, ctx, False)
+        await ctx.send("`Currently not working`")
     except errors.NoProductsFound:
-        await ctx.send("No products found. Try again.")
+        await ctx.send(f"`{name} not found`")
 
 
 # ==============================================================================
 # Stadium Goods
 # ==============================================================================
 
-# on button press
-@slash.component_callback()
-async def sg_payout_button(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = stadium_goods.get_prices(title)
-    try:
-        await embed.send_payout(info, ctx)
-    except errors.NoRetailPrice:
-        await ctx.edit_origin(
-            content=":red_square: Retail price not available. :red_square:"
-        )
-
-
-@slash.component_callback()
-async def sg_listing_button(ctx: ComponentContext):
-    title = ctx.origin_message.embeds[0].title
-    info = stadium_goods.get_prices(title)
-    await embed.send_listing(info, ctx, True)
-
-
 @slash.slash(name="SG", description="Check Stadium Goods prices", guild_ids=GUILD_ID)
 async def _sg(ctx, name: str):
     try:
-        info = stadium_goods.get_prices(name)
-        await embed.send_listing(info, ctx, False)
+        await ctx.send("`Currently not working`")
     except errors.NoProductsFound:
-        await ctx.send("No products found. Try again.")
+        await ctx.send(f"`{name} not found`")
 
 
 # ==============================================================================
