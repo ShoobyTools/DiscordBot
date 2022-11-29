@@ -5,6 +5,7 @@ import json
 import errors
 import products
 
+
 # scrape goat and return a json
 def scrape(keywords) -> json:
     json_string = json.dumps({"params": f"query={keywords}&hitsPerPage=20&facets=*"})
