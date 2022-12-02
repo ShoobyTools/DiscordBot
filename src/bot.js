@@ -1,4 +1,4 @@
-import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
+import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import * as dotenv from 'dotenv';
@@ -33,6 +33,5 @@ client.commands = new Collection();
 		}
 	}
 })();
-
 
 client.login(process.env.TOKEN);

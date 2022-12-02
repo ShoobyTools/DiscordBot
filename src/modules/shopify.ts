@@ -89,4 +89,4 @@ const atmosStock = async (url: string) => {
 
 // getVariants("https://www.shoepalace.com/products/jordan-dd0587-141-air-jordan-5-retro-concord-mens-lifestyle-shoes-white-blue?variant=41233584193742");
 // atmosStock("https://www.atmosusa.com/products/nike-dunk-low-special-edition-kentucky-white-varsity-royal");
-export {getVariants};
+export {getVariants, atmosStock};

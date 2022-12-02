@@ -13,7 +13,11 @@ export const command = {
 	data: data,
 	async execute(interaction) {
 		const product = interaction.options.getString('product');
-		const variants = await getVariants(product);
-		await interaction.reply(variants);
+		try {
+			const variants = await getVariants(product);
+			await interaction.reply(variants);
+		} catch (error) {
+			await interaction.reply("Error: " + error);
+		}
 	},
 };
