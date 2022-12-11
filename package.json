@@ -8,7 +8,8 @@
     "start": "npm run build && node ./build/bot.js",
     "dev": "npm run build && node ./build/deploy-commands-local.js && node ./build/bot.js",
     "deploy": "npm run build && node ./build/deploy-commands-global.js && node ./build/bot.js",
-    "shopify": "npm run build && node ./build/modules/shopify.js"
+    "variants": "npm run build && node ./build/modules/variants.js",
+    "proxy": "npm run build && node ./build/modules/proxy.js"
   },
   "keywords": [],
   "author": "",

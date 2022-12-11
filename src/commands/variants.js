@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { getVariants } from '../modules/shopify';
+import { getVariants } from '../modules/variants';
 
 const data = new SlashCommandBuilder()
 	.setName('vars')
