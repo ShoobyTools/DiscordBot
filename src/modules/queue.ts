@@ -2,16 +2,21 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { headers } from "../common/requests";
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
+import { queueMonitorEmbed } from "../common/embed";
 
-class ShopifyMonitor {
+class ShopifyQueue {
     #domain: string;
+    #icon: string;
+    #queue: number = 0;
+    #lastChecked: number = -1;
     #client: AxiosInstance;
     #placeholder: number;
 
     private constructor(domain: string, placeholder: number) {
         this.#domain = domain;
+        this.#icon = `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=64`;
         this.#client = wrapper(axios.create({ baseURL: `https://${domain}/`, jar: new CookieJar(), headers: headers }));
-        this.#placeholder = 0;
+        this.#placeholder = placeholder;
         console.log(`Initialized ${domain} with placeholder ${placeholder}`);
     }
 
@@ -22,7 +27,7 @@ class ShopifyMonitor {
         const response: AxiosResponse = await axios.get(url, { headers: headers });
         const placeholder: number = this.findAvailableVariant(response.data.products);
 
-        return new ShopifyMonitor(domain, placeholder);
+        return new ShopifyQueue(domain, placeholder);
     }
 
     static findAvailableVariant = (products: any[]): number => {
@@ -47,18 +52,58 @@ class ShopifyMonitor {
         }
         return domain[0].toLowerCase();
     }
+
+    checkQueue = async (): Promise<number> => {
+        this.#lastChecked = this.getTimestamp();
+        const url: string = `https://${this.#domain}/cart/add.js`;
+        const response: AxiosResponse = await this.#client.post(url, { id: this.#placeholder, quantity: 1 });
+        console.log(response.status);
+        return response.status;
+    }
+
+    get domain(): string {
+        return this.#domain;
+    }
+
+    get icon(): string {
+        return this.#icon;
+    }
+
+    get queue(): number {
+        return this.#queue;
+    }
+
+    get lastChecked(): number {
+        return this.#lastChecked;
+    }
+
+    get expectedPassTime(): number {
+        return this.#lastChecked + this.#queue;
+    }
+
+    // returns UNIX timestamp in seconds
+    private getTimestamp = (): number => {
+        return Date.now() / 1000;
+    }
 }
 
 class QueueDriver {
-    static #domains: ShopifyMonitor[] = [];
+    static #sites: ShopifyQueue[] = [];
 
     static initialize = async (inputs: string[]) => {
         for await (const input of inputs) {
-            this.#domains.push(await ShopifyMonitor.initialize(input));
+            this.#sites.push(await ShopifyQueue.initialize(input));
+        }
+    }
+
+    static checkQueue = async () => {
+        for await (const site of this.#sites) {
+            await site.checkQueue();
+            queueMonitorEmbed(site)
         }
     }
 }
 
-const queue = QueueDriver.initialize(["https://kith.com", "https://dtlr.com/products/234234"]);
+// const queue = QueueDriver.initialize(["https://kith.com", "https://dtlr.com/products/234234"]);
 
-export default QueueDriver;
+export { QueueDriver, ShopifyQueue };

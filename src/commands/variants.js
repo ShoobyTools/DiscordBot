@@ -15,7 +15,7 @@ export const command = {
 		const product = interaction.options.getString('product');
 		try {
 			const variants = await getVariants(product);
-			await interaction.reply(variants);
+			await interaction.reply("Not finished yet.");
 		} catch (error) {
 			await interaction.reply("Error: " + error);
 		}

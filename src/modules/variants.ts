@@ -9,7 +9,7 @@ const getVariants = async (url: string) => {
 		resp = await axios.get(`${url.replace(/.variant=.*/, "")}.json`, { headers: headers });
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
-			throw new Error("Axios error getting StockX product: " + error);
+			throw new Error("Axios error getting product: " + error);
 		} else {
 			throw new Error("Unexpected error getting StockX product: " + error);
 		}
