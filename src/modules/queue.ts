@@ -3,6 +3,7 @@ import { headers } from "../common/requests";
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import { queueMonitorEmbed } from "../common/embed";
+import { parseDomain, getFaviconUrl } from "../common/tools";
 
 class ShopifyQueue {
     #domain: string;
@@ -14,14 +15,14 @@ class ShopifyQueue {
 
     private constructor(domain: string, placeholder: number) {
         this.#domain = domain;
-        this.#icon = `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=64`;
+        this.#icon = getFaviconUrl(domain);
         this.#client = wrapper(axios.create({ baseURL: `https://${domain}/`, jar: new CookieJar(), headers: headers }));
         this.#placeholder = placeholder;
         console.log(`Initialized ${domain} with placeholder ${placeholder}`);
     }
 
     static initialize = async (input: string) => {
-        const domain = this.parseDomain(input);
+        const domain = parseDomain(input);
 
         const url: string = `https://${domain}/products.json`;
         const response: AxiosResponse = await axios.get(url, { headers: headers });
@@ -39,18 +40,6 @@ class ShopifyQueue {
             }
         }
         return -1;
-    }
-
-    static parseDomain = (input: string): string => {
-        if (!input.includes(".")) {
-            return input.toLowerCase();
-        }
-
-        const domain: RegExpMatchArray | null = input.match(/\w+(?:\.\w+)+/);
-        if (domain === null) {
-            throw new Error("Cannot parse domain");
-        }
-        return domain[0].toLowerCase();
     }
 
     checkQueue = async (): Promise<number> => {

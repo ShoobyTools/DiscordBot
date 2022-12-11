@@ -3,20 +3,34 @@ import { ProductVariants } from "../types/product";
 import { load } from "cheerio";
 import { headers } from "../common/requests";
 
-const getVariants = async (url: string) => {
+const getVariants = async (url: string): Promise<ProductVariants> => {
 	let resp: AxiosResponse;
 	try {
-		resp = await axios.get(`${url.replace(/.variant=.*/, "")}.json`, { headers: headers });
+		resp = await axios.get(`${url.replace(/\?variant=.*/, "")}.json`, { headers: headers });
 	} catch (error) {
-		if (axios.isAxiosError(error)) {
-			throw new Error("Axios error getting product: " + error);
+		if (axios.isAxiosError(error) && error!.response!.status === 404) {
+			throw new Error("Product is not loaded");
 		} else {
 			throw new Error("Unexpected error getting StockX product: " + error);
 		}
 	}
 
+	let product;
 	if (resp.status == 200) {
-		return resp.data;
+		product = resp.data.product;
+	}
+
+	return {
+		title: product.title,
+		url: url,
+		image: product.images[0].src,
+		variants: product.variants.map((variant: any) => {
+			return {
+				size: variant.title,
+				variant: variant.id,
+			};
+		}),
+		hasQuantity: false
 	}
 };
 
@@ -72,6 +86,6 @@ const atmosStock = async (url: string) => {
 	return results;
 };
 
-// getVariants("https://www.shoepalace.com/products/jordan-dd0587-141-air-jordan-5-retro-concord-mens-lifestyle-shoes-white-blue?variant=41233584193742");
+getVariants("https://www.shoepalace.com/products/jordan-dd0587-141-air-jordan-5-retro-concord-mens-lifestyle-shoes-white-blue?variant=41233584193742");
 // atmosStock("https://www.atmosusa.com/products/nike-dunk-low-special-edition-kentucky-white-varsity-royal");
 export {getVariants, atmosStock};

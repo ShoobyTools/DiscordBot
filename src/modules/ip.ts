@@ -1,4 +1,4 @@
-const parseProxy = (proxy: string): string[] => {
+const genIPs = (proxy: string): string[] => {
     const prefix: RegExpMatchArray | null = proxy.match(/(?:\d+\.){3}/);
     const suffix: RegExpMatchArray | null = proxy.match(/(?::.+){2,3}/);
 
@@ -15,8 +15,8 @@ const parseProxy = (proxy: string): string[] => {
     for (let i = 0; i < 256; i++) {
         ipRange.push(`${prefixString}${i}${suffixString}`);
     }
-
+    
     return ipRange;
 }
 
-export {parseProxy};
+export {genIPs};

@@ -1,4 +1,6 @@
 import { ShopifyQueue } from "../modules/queue";
+import { ProductVariants } from "../types/product";
+import { getFaviconUrl, parseDomain } from "./tools";
 
 const queueMonitorEmbed = (queue: ShopifyQueue) => {
     return {
@@ -26,4 +28,46 @@ const queueMonitorEmbed = (queue: ShopifyQueue) => {
     };
 }
 
-export { queueMonitorEmbed }
+const variantsEmbed = (product: ProductVariants) => {
+    const fields = [{
+        name: 'Sizes',
+        value: `\`\`\`\n${product.variants.map((variant) => variant.size).join('\n')}\`\`\``,
+        inline: true,
+    }];
+
+    if (product.hasQuantity) {
+        fields.push({
+            name: 'Stock',
+            value: `\`\`\`md\nvalue goes here\`\`\``,
+            inline: true,
+        });
+    }
+
+    fields.push({
+        name: 'Variants',
+        value: `\`\`\`\n${product.variants.map((variant) => variant.variant).join('\n')}\`\`\``,
+        inline: true,
+    });
+
+    const domain = parseDomain(product.url);
+
+    return {
+        color: 0x0099ff,
+        title: product.title,
+        url: product.url,
+        author: {
+            name: domain,
+            icon_url: getFaviconUrl(domain),
+            url: product.url,
+        },
+        thumbnail: {
+            url: product.image,
+        },
+        fields: fields,
+        footer: {
+            text: `Shopify Variants`,
+        }
+    };
+};
+
+export { queueMonitorEmbed, variantsEmbed }
