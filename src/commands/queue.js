@@ -30,6 +30,8 @@ const data = new SlashCommandBuilder()
 export const command = {
 	data: data,
 	async execute(interaction) {
+		await interaction.reply("not implemented yet");
+		return;
 		let interval;
 		if (running) {
 			const row = new ActionRowBuilder().addComponents(

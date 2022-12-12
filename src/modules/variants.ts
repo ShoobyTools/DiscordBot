@@ -1,9 +1,16 @@
 import axios, { AxiosResponse } from "axios";
-import { ProductVariants } from "../types/product";
+import { ProductVariants, Variant } from "../types/product";
 import { load } from "cheerio";
 import { headers } from "../common/requests";
+import { parseDomain } from "../common/tools";
 
 const getVariants = async (url: string): Promise<ProductVariants> => {
+	const domain = parseDomain(url);
+	// custom domain checks
+	if (domain === "atmosusa.com") {
+		return atmosStock(url);
+	}
+
 	let resp: AxiosResponse;
 	try {
 		resp = await axios.get(`${url.replace(/\?variant=.*/, "")}.json`, { headers: headers });
@@ -20,25 +27,40 @@ const getVariants = async (url: string): Promise<ProductVariants> => {
 		product = resp.data.product;
 	}
 
-	return {
-		title: product.title,
-		url: url,
-		image: product.images[0].src,
-		variants: product.variants.map((variant: any) => {
+	const hasQuantity = "inventory_quantity" in product.variants[0];
+	let totalQuantity = 0;
+	let vars: Variant[];
+	if (hasQuantity) {
+		vars = product.variants.map((variant: any) => {
+			const quantity = Math.abs(variant.inventory_quantity);
+			totalQuantity += quantity;
+			return {
+				size: variant.title,
+				variant: variant.id,
+				quantity: quantity,
+			};
+		});
+	} else {
+		vars = product.variants.map((variant: any) => {
 			return {
 				size: variant.title,
 				variant: variant.id,
 			};
-		}),
-		hasQuantity: false
+		});
 	}
+
+	return {
+		title: product.title,
+		url: url,
+		image: product.images[0].src,
+		variants: vars,
+		hasQuantity: hasQuantity,
+		totalQuantity: totalQuantity,
+	};
 };
 
-const atmosStock = async (url: string) => {
-	if (!url.includes("atmosusa.com")) {
-		throw new Error("Unsupported URL. atmosUSA only.");
-	}
-
+// atmos loads quantity data from within the HTML so extra work is required
+const atmosStock = async (url: string): Promise<ProductVariants> => {
 	let resp: AxiosResponse;
 	try {
 		resp = await axios.get(url, { headers: headers });
@@ -70,22 +92,29 @@ const atmosStock = async (url: string) => {
 		throw new Error("No product data found");
 	}
 
-	const results = [];
+	const vars: Variant[] = [];
 	const variants = data.product.variants;
 	const inventory = data.inventories;
-
+	let totalQuantity = 0;
 	for (const variant in inventory) {
 		const size = variants.find((v: any) => v.id == variant).title;
-		results.push({
-			variant: variant,
+		const quantity = Math.abs(inventory[variant].inventory_quantity);
+		totalQuantity += quantity;
+		vars.push({
 			size: size,
-			stock: Math.abs(inventory[variant].inventory_quantity),
+			variant: Number(variant),
+			quantity: quantity,
 		});
 	}
 
-	return results;
+	return {
+		title: data.product.title,
+		url: url,
+		image: data.product.images[0].startsWith("//") ? `https:${data.product.images[0]}` : data.product.images[0],
+		variants: vars,
+		hasQuantity: true,
+		totalQuantity: totalQuantity,
+	};
 };
 
-getVariants("https://www.shoepalace.com/products/jordan-dd0587-141-air-jordan-5-retro-concord-mens-lifestyle-shoes-white-blue?variant=41233584193742");
-// atmosStock("https://www.atmosusa.com/products/nike-dunk-low-special-edition-kentucky-white-varsity-royal");
-export {getVariants, atmosStock};
+export { getVariants };

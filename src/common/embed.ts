@@ -38,7 +38,7 @@ const variantsEmbed = (product: ProductVariants) => {
     if (product.hasQuantity) {
         fields.push({
             name: 'Stock',
-            value: `\`\`\`md\nvalue goes here\`\`\``,
+            value: `\`\`\`md\n${product.variants.map((variant) => variant.quantity === 0 ? "* " : variant.quantity).join('\n')}\`\`\``,
             inline: true,
         });
     }
@@ -48,6 +48,14 @@ const variantsEmbed = (product: ProductVariants) => {
         value: `\`\`\`\n${product.variants.map((variant) => variant.variant).join('\n')}\`\`\``,
         inline: true,
     });
+
+    if (product.hasQuantity) {
+        fields.push({
+            name: 'Total stock',
+            value: `\`\`\`\n${product.totalQuantity}\`\`\``,
+            inline: false,
+        });
+    }
 
     const domain = parseDomain(product.url);
 

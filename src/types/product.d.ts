@@ -13,4 +13,4 @@ interface ProductVariants {
     totalQuantity?: number;
 }
 
-export { ProductVariants };
+export { Variant, ProductVariants };
