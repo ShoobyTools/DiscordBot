@@ -1,0 +1,31 @@
+{
+  "name": "discordbot",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "del-cli build && npx tsc",
+    "start": "npm run build && node ./build/bot.js",
+    "dev": "npm run build && node ./build/deploy-commands-local.js && node ./build/bot.js",
+    "deploy": "npm run build && node ./build/deploy-commands-global.js && node ./build/bot.js",
+    "variants": "npm run build && node ./build/modules/variants.js",
+    "proxy": "npm run build && node ./build/modules/proxy.js",
+    "queue": "npm run build && node ./build/modules/queue.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/tough-cookie": "^4.0.2",
+    "axios": "^1.2.1",
+    "axios-cookiejar-support": "^4.0.3",
+    "cheerio": "^1.0.0-rc.12",
+    "del-cli": "^5.0.0",
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.3",
+    "tough-cookie": "^4.1.2"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.2"
+  }
+}

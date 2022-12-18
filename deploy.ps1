@@ -1,1 +1,0 @@
-7z a deploy.zip *.py requirements.txt
