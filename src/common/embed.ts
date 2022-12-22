@@ -6,7 +6,6 @@ const queueMonitorEmbed = (queue: ShopifyQueue) => {
     return {
         color: 0x0099ff,
         title: `${queue.domain}`,
-        description: 'Queue monitor',
         thumbnail: {
             url: queue.icon,
         },
@@ -18,13 +17,15 @@ const queueMonitorEmbed = (queue: ShopifyQueue) => {
             },
             {
                 name: 'Expected pass time',
-                value: `<T:${queue.expectedPassTime}>`,
+                value: `<t:${queue.expectedPassTime}:T>`,
                 inline: false,
             },
+            {
+                name: 'Last checked',
+                value: `<t:${queue.lastChecked}:T>`,
+                inline: false,
+            }
         ],
-        footer: {
-            text: `Last checked <T:${queue.lastChecked}>`,
-        },
     };
 }
 
