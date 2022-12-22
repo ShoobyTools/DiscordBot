@@ -1,6 +1,7 @@
-import { Client, Collection, GatewayIntentBits } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
+import { stopQueueDriver } from './commands/queue';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -33,5 +34,13 @@ client.commands = new Collection();
 		}
 	}
 })();
+
+client.on(Events.InteractionCreate, async (interaction) => {
+	if (!interaction.isButton()) return;
+	if (interaction.customId === 'stop-queue') {
+		await stopQueueDriver();
+		await interaction.update({ content: "Done monitoring queue.", components: [] });
+	}
+});
 
 client.login(process.env.TOKEN);

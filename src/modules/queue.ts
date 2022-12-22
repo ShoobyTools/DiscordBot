@@ -103,9 +103,7 @@ class ShopifyQueue {
 		if (response.status !== 200) {
 			throw new Error("Unable to poll queue for " + this.#domain);
 		}
-		const data = response.data.data.poll;
-		this.#queue = data.queueEtaSeconds;
-		this.#lastQueueToken = data.token;
+		this.#queue = response.data.data.poll.queueEtaSeconds;
 	};
 
 	get domain(): string {

@@ -1,6 +1,6 @@
 const parseDomain = (input: string): string => {
 	if (!input.includes(".")) {
-		return input.toLowerCase();
+		return input.toLowerCase() + ".com";
 	}
 
 	const domain = new URL(input);
