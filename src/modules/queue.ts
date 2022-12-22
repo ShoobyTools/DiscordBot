@@ -1,98 +1,123 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { headers } from "../common/requests";
-import { wrapper } from 'axios-cookiejar-support';
-import { CookieJar } from 'tough-cookie';
+import { wrapper } from "axios-cookiejar-support";
+import { CookieJar } from "tough-cookie";
 import { queueMonitorEmbed } from "../common/embed";
 import { parseDomain, getFaviconUrl } from "../common/tools";
 
 class ShopifyQueue {
-    #domain: string;
-    #icon: string;
-    #queue: number = 0;
-    #lastChecked: number = -1;
-    #client: AxiosInstance;
-    #placeholder: number;
+	#domain: string;
+	#icon: string;
+	#queue: number = 0;
+	#lastChecked: number = -1;
+	#lastQueueToken: string;
+	#client: AxiosInstance;
 
-    private constructor(domain: string, placeholder: number) {
-        this.#domain = domain;
-        this.#icon = getFaviconUrl(domain);
-        this.#client = wrapper(axios.create({ baseURL: `https://${domain}/`, jar: new CookieJar(), headers: headers }));
-        this.#placeholder = placeholder;
-        console.log(`Initialized ${domain} with placeholder ${placeholder}`);
-    }
+	private constructor(domain: string, client: AxiosInstance, queueToken: string) {
+		this.#domain = domain;
+		this.#icon = getFaviconUrl(domain);
+		this.#lastQueueToken = queueToken;
+		this.#client = client;
+	}
 
-    static initialize = async (input: string) => {
-        const domain = parseDomain(input);
+	static initialize = async (input: string) => {
+		const domain = parseDomain(input);
 
-        const url: string = `https://${domain}/products.json`;
-        const response: AxiosResponse = await axios.get(url, { headers: headers });
-        const placeholder: number = this.findAvailableVariant(response.data.products);
+		let response: AxiosResponse = await axios.get(`https://${domain}/products.json`, { headers: headers });
+		const placeholder: number = this.findAvailableVariant(response.data.products);
+		if (placeholder === -1) {
+			throw new Error("No available products found");
+		}
 
-        return new ShopifyQueue(domain, placeholder);
-    }
+		const client = wrapper(axios.create({ baseURL: `https://${domain}/`, jar: new CookieJar(), headers: headers }));
+		await client.post("cart/add.js", { id: placeholder, quantity: 1 });
 
-    static findAvailableVariant = (products: any[]): number => {
-        for (const product of products) {
-            for (const variant of product.variants) {
-                if (variant.available) {
-                    return variant.id;
-                }
-            }
-        }
-        return -1;
-    }
+		// attempt to checkout and get initial queue token
+		response = await client.get("checkout");
+		const queueToken = response.config.jar?.toJSON().cookies.find((cookie) => cookie.key === "_checkout_queue_token")?.value;
+		return new ShopifyQueue(domain, client, queueToken);
+	};
 
-    checkQueue = async (): Promise<number> => {
-        this.#lastChecked = this.getTimestamp();
-        const url: string = `https://${this.#domain}/cart/add.js`;
-        const response: AxiosResponse = await this.#client.post(url, { id: this.#placeholder, quantity: 1 });
-        console.log(response.status);
-        return response.status;
-    }
+	static findAvailableVariant = (products: any[]): number => {
+		for (const product of products) {
+			for (const variant of product.variants) {
+				if (variant.available) {
+					return variant.id;
+				}
+			}
+		}
+		return -1;
+	};
 
-    get domain(): string {
-        return this.#domain;
-    }
+	checkQueue = async (): Promise<number> => {
+		this.#lastChecked = this.getTimestamp();
+		const payload = {
+			query: "\n{\npoll(token: $token) {\ntoken\npollAfter\nqueueEtaSeconds\nproductVariantAvailability {\nid\navailable\n}\n}\n}\n",
+			variables: {
+				token: this.#lastQueueToken,
+			},
+		};
+		const response = await this.#client.post("queue/poll", payload);
+		const data = response.data.data.poll;
+        this.#queue = data.queueEtaSeconds;
+        this.#lastQueueToken = data.token;
+		return data.queueEtaSeconds;
+	};
 
-    get icon(): string {
-        return this.#icon;
-    }
+	get domain(): string {
+		return this.#domain;
+	}
 
-    get queue(): number {
-        return this.#queue;
-    }
+	get icon(): string {
+		return this.#icon;
+	}
 
-    get lastChecked(): number {
-        return this.#lastChecked;
-    }
+	get queue(): number {
+		return this.#queue;
+	}
 
-    get expectedPassTime(): number {
-        return this.#lastChecked + this.#queue;
-    }
+	get lastChecked(): number {
+		return this.#lastChecked;
+	}
 
-    // returns UNIX timestamp in seconds
-    private getTimestamp = (): number => {
-        return Date.now() / 1000;
-    }
+	get expectedPassTime(): number {
+		return this.#lastChecked + this.#queue;
+	}
+
+	// returns UNIX timestamp in seconds
+	private getTimestamp = (): number => {
+		return Date.now() / 1000;
+	};
 }
 
 class QueueDriver {
-    static #sites: ShopifyQueue[] = [];
+	#sites: ShopifyQueue[] = [];
 
-    static initialize = async (inputs: string[]) => {
-        for await (const input of inputs) {
-            this.#sites.push(await ShopifyQueue.initialize(input));
-        }
-    }
+	private constructor(sites: ShopifyQueue[]) {
+		this.#sites = sites;
+	}
 
-    static checkQueue = async () => {
-        for await (const site of this.#sites) {
-            await site.checkQueue();
-            queueMonitorEmbed(site)
-        }
-    }
+	static initialize = async (inputs: string[]) => {
+		const sites = await Promise.all(
+			inputs.map(async (input) => {
+				return await ShopifyQueue.initialize(input);
+			})
+		);
+		return new QueueDriver(sites);
+	};
+
+	checkQueue = async () => {
+		for await (const site of this.#sites) {
+			const queue = await site.checkQueue();
+            console.log(site.domain, "queue length", queue);
+			queueMonitorEmbed(site);
+		}
+	};
 }
 
-// const queue = QueueDriver.initialize(["https://kith.com", "https://dtlr.com/products/234234"]);
+(async () => {
+	const driver = await QueueDriver.initialize(["https://kith.com", "https://dtlr.com/products/234234"]);
+	await driver.checkQueue();
+})();
 
 export { QueueDriver, ShopifyQueue };
