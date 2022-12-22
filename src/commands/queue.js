@@ -9,8 +9,6 @@ let timeout;
 let interval;
 // controller for site queues
 let driver;
-// channel to send messages in
-let channel;
 let messages = {};
 const NUM_SEC = 5;
 const STOP_TIMEOUT = 30 * 60;
@@ -66,7 +64,6 @@ export const command = {
 				.setStyle(ButtonStyle.Danger)
 		)
 		await interaction.reply({ content: `Monitoring queue. Stopping at <t:${Math.floor(Date.now() / 1000) + STOP_TIMEOUT}:T>`, components: [button]});
-		channel = interaction.channel;
 		const inputs = [];
 		if (interaction.options.getString('site1') !== null) {
 			inputs.push(interaction.options.getString('site1'));
@@ -86,23 +83,23 @@ export const command = {
 
 		driver = await QueueDriver.initialize(inputs);
 		running = true;
-		let sites = driver.sites;
-		for await (const site of sites) {
-			const ref = await channel.send({ embeds: [queueMonitorEmbed(site)] });
+
+		// initialize messages
+		for await (const site of driver.sites) {
+			const ref = await interaction.channel.send({ embeds: [queueMonitorEmbed(site)] });
 			messages[site.domain] = ref;
 		}
 
 		interval = setInterval(async () => {
-			sites = await driver.getSiteQueues();
-			for await (const site of sites) {
+			for await (const site of await driver.getSiteQueues()) {
 				await messages[site.domain].edit({ embeds: [queueMonitorEmbed(site)] });
 			}
-		}, NUM_SEC * 1000)
+		}, NUM_SEC * 1000);
 
 		// stop after 30 minutes if it hasn't been stopped already
 		timeout = setTimeout(async () => {
-			await channel.send("Done monitoring queue.");
+			await interaction.channel.send("Done monitoring queue.");
 			await stopQueueDriver();
-		}, STOP_TIMEOUT * 1000)
+		}, STOP_TIMEOUT * 1000);
 	},
 };
